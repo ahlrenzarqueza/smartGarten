@@ -1,0 +1,235 @@
+/*
+ * App Global CSS
+ * ----------------------------------------------------------------------------
+ * Put style rules here that you want to apply globally. These styles are for
+ * the entire app and not just one component. Additionally, this file can be
+ * used as an entry point to import other CSS/Sass files to be included in the
+ * output CSS.
+ * For more information on global stylesheets, visit the documentation:
+ * https://ionicframework.com/docs/layout/global-stylesheets
+ */
+
+/* Core CSS required for Ionic components to work properly */
+@import "~@ionic/angular/css/core.css";
+
+/* Basic CSS for apps built with Ionic */
+@import "~@ionic/angular/css/normalize.css";
+@import "~@ionic/angular/css/structure.css";
+@import "~@ionic/angular/css/typography.css";
+@import '~@ionic/angular/css/display.css';
+
+/* Optional CSS utils that can be commented out */
+@import "~@ionic/angular/css/padding.css";
+@import "~@ionic/angular/css/float-elements.css";
+@import "~@ionic/angular/css/text-alignment.css";
+@import "~@ionic/angular/css/text-transformation.css";
+@import "~@ionic/angular/css/flex-utils.css";
+
+.link-color
+{
+    color: #5A9558;
+}
+.top-header
+{
+    height: 15%;
+}
+.upper-tab
+{
+    border: #00000038 !important;
+    border-bottom-style: dotted !important;
+    height: 100%;
+    align-content: center;
+}
+.upper-nav
+{
+    border-bottom: black 2px;
+    border-bottom-style: solid;
+    height: 13vh;
+}
+
+.grid-nav
+{
+    // border-bottom: rgb(194, 189, 176) 2px;
+    // border-bottom-style: solid;
+}
+
+.lower-nav
+{
+    border-top: black 2px;
+    border-top-style: solid;
+    // height: 10vh;
+}
+
+.full-icon
+{
+    height : 70%;
+    width : 70%;
+
+}
+
+.full-icon-tab2
+{
+    height: 80%;
+    width: 140%;
+}
+.top-title
+{
+    padding:0px;
+    width:100%;
+    font-size: 140%;
+    // line-height: 0%;
+    height: 100% !important;
+}
+
+.top-h1
+{
+    font-size: 200%;
+    margin-top: 5%;
+}
+
+.tab3-top-h1
+{
+        font-size: 6vw;
+        margin-bottom: 0%;
+        // font-size: 5vw;
+}
+
+.tab3-top-h6
+{
+    font-size: 4vw;
+    margin: 0%;
+}
+
+.row-div
+{
+    height: 100%;
+    width: 100%;
+    text-align: center !important;
+}
+
+.align-text-middle {
+    display: flex;
+    align-items: center;
+    left: 15%;
+    top: 10%;
+}
+.align-text-middle {
+    display: flex;
+    align-items: center;
+    top: 10%;
+    // left: 15%;
+}
+.col-p
+{
+    font-size: 200%;
+    margin: 0%;
+    margin-top: 10%;
+}
+
+ion-col
+{
+    top: 10%;
+}
+
+.icon-img
+{
+    // height: 50%;
+    width: 15vw;
+    // padding-top: 63%;
+}
+
+.body-img
+{
+    height: 11vh;
+}
+.device-select-header
+    {
+        font-size: 85%;
+        // height: 20%;
+    }
+
+.tab2-margin
+{
+    margin: 0%;
+    margin-top: 4%;
+}
+
+.tab2-img-col
+{
+    top: 20%;
+    left: 2%;
+}
+
+.tab2-toggle
+{
+    padding-top: 75%;
+}
+
+.circle
+{
+    width: 18vw;
+    height: 18vw;
+    border-radius: 50%;
+    font-size: 100%;
+    color: #1e2023;
+    line-height: 18vw;
+    text-align: center;
+    border: solid 1px black;
+    margin-left: 15%;
+}
+
+.tab3-bottom-h6
+{
+    margin-top: 0%;
+    margin-left: 6%;
+    font-size: 4vw;
+}
+.tab3-body-img
+{
+    height: 50%;
+    margin-left: -7vw;
+    display: inline-block;
+}
+
+
+.low-footer
+{
+    height: 13vh;
+}
+
+ion-content {
+    --overflow: hidden;
+}
+@media screen and (max-width : 350px){
+  
+    .footer-h2
+    {
+        margin-top: 0%;
+    }
+}
+
+// @media (min-width:600px){
+
+//     .body-img
+//     {
+//         height: 30%;
+//     }
+// }
+
+.center-left {
+    text-align: left;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.center-right {
+    text-align: right;
+    align-items: center !important;
+}
+
+
+
+h,h1,h2,h3,h4,h5,h6,p
+{
+    color: black;
+}

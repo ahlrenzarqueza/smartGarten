@@ -1,0 +1,85 @@
+<ion-header no-border class="top-header">
+  <ion-toolbar class='upper-tab'>
+      <h1 align="center" class='top-h1'>How is my garden?</h1>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content style="height: 100%">
+  <ion-grid style="height: 100%;padding: 0px">
+
+    <ion-row style="height: 25%"class = 'grid-nav' align='center'>
+      <ion-col size ='6' align='left'>
+          <!-- change the src of the <ion-img> to change image -->
+          <ion-img (click)="redirectToSettings()" class="body-img" src='assets/icon/thermometer.png'></ion-img>
+      </ion-col>
+
+
+      <ion-col size ='6'>
+          <p class = 'col-p'>{{temp}}</p>        
+      </ion-col>
+    </ion-row>
+
+    <ion-row style="height: 25%"class = 'grid-nav' align='center'>
+        <ion-col size ='6' align='left'>
+          <!-- change the src of the <ion-img> to change image -->
+          <ion-img (click)="redirectToSettings()" class="body-img" src='assets/icon/drop.png'></ion-img>
+        </ion-col>
+  
+  
+        <ion-col size ='6'  >
+                <p class = 'col-p'>{{moist}}</p>
+        </ion-col>
+      </ion-row>
+
+      <ion-row style="height: 25%"class = 'grid-nav' align='center'>
+          <ion-col size ='6' align='left'>
+          <!-- change the src of the <ion-img> to change image -->
+          <ion-img (click)="redirectToSettings()" class="body-img" src='assets/icon/water-glass.png'></ion-img>    
+          </ion-col>
+    
+    
+          <ion-col size ='6'>
+              <p class = 'col-p'>{{water}}</p>
+          </ion-col>
+        </ion-row>
+
+        <ion-row style="height: 25%"class = 'grid-nav' align='center'>
+            <ion-col size ='6' align='left'>
+              <!-- change the src of the <ion-img> to change image -->
+              <ion-img (click)="redirectToSettings()" class="body-img" src='assets/icon/ph.png'></ion-img>
+            </ion-col>
+      
+      
+            <ion-col size ='6'>
+                <p class = 'col-p'>{{ph}}</p>
+
+            </ion-col>
+          </ion-row>
+    
+  </ion-grid>
+</ion-content>
+
+ <!-- FOOTER CODE  -->
+<ion-footer no-border style="height: 15%">
+  <ion-toolbar class = 'lower-nav'>
+      <ion-grid>
+          <ion-row >
+              <ion-col size='2' align='center' class="center-right">
+              </ion-col>
+              <ion-col size='6' align='center' class="center-right">
+                <div>
+                  <h1 style="margin-bottom: 0%;font-size: 7vw;" class="footer-h2"> <i>simple</i><b>PLANT</b></h1>
+                  <!-- the below a tag is for redirecting user to company website , to change website url go to redirect() function in tab1.page.ts -->
+                  <a style="font-size: 4vw;color: #5A9558;padding-right: 4.4vw;" (click)='redirect()'> www.simpleplant.de</a>
+                  <div style="width: 1vw;"></div>
+              </div>
+              </ion-col>
+              <ion-col size='4' class="center-left">
+                  <!-- the below a tag is for redirecting user to social media website , to change social media url go to facebook()/instagram() function in tab1.page.ts -->
+                  <ion-icon size="large" (click) = "facebook()" name="logo-facebook"></ion-icon> 
+                  <ion-icon size="large" (click) = "instagram()" name="logo-instagram"></ion-icon>
+              </ion-col>
+          </ion-row>
+      </ion-grid>
+    </ion-toolbar>
+</ion-footer>

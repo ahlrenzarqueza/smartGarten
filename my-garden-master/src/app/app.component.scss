@@ -1,0 +1,21 @@
+
+toolbar-background {
+    border: none;
+}
+
+.ion-toolbar
+{
+    border: #00000038 !important;
+    border-bottom-style: dotted !important;
+
+}
+ion-tab-button[aria-selected=true] {
+    box-shadow: 0 100px 0 0 blue inset;
+  }
+
+.tabbar a[aria-selected=true] {
+    border-top: 100px;
+    border-style: solid;    
+}
+
+

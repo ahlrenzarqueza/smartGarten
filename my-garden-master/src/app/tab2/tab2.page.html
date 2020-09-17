@@ -1,0 +1,148 @@
+<ion-header no-border class="top-header">
+  <ion-toolbar class='upper-tab'>
+      <h1 align='center' class="top-h1">Garden Set-up</h1> 
+  </ion-toolbar>
+</ion-header>
+
+<ion-content style="height: 100%">
+  <ion-grid style="height: 100%;padding: 0%">
+      <ion-row style="height:30%"class = 'grid-nav' align='center'>
+          <ion-col size ='2' align='left' col-xl-2 col-lg-3 col-md-4 class="tab2-img-col">
+              <!-- change the src of the <ion-img> to change image -->
+              <ion-img class='tab2-body-img' src="assets/icon/sun.png"></ion-img>
+          </ion-col>
+    
+          <ion-col size ='8'>
+            <ion-row >
+              <ion-col size ='6' col-xl-2 col-lg-3 col-md-4>
+                <p class="tab2-margin"><b> &nbsp; Sunrise </b> </p> 
+                <!-- <ion-label position="floating">hh:mm a</ion-label> -->
+                <ion-datetime (ionChange) = 'sunriseFunc()'  displayFormat="hh:mm a" [(ngModel)] = 'sunrise'></ion-datetime>     
+              </ion-col>
+
+              <ion-col size ='6' col-xl-2 col-lg-3 col-md-4>
+                  <p class="tab2-margin"><b> &nbsp; Sunset </b></p>    
+                      <ion-datetime (ionChange) = 'sunsetFunc()' displayFormat="hh:mm a" [(ngModel)] = 'sunset'></ion-datetime> 
+              </ion-col>
+            </ion-row>
+            <ion-row  style="margin-left: 2vw;">                      
+              <ion-col>
+                  <ion-button size="small" shape="round" fill='outline'  ngClass='round-button' [color]="timeStatusArray[1]?'custgreen':'custgrey'" (click)="timerFunc(1)"></ion-button>   
+              </ion-col>
+
+              <ion-col>
+                  <ion-button size="small" shape="round" fill='outline' ngClass='round-button' [color]="timeStatusArray[2]?'custgreen':'custgrey'" (click)="timerFunc(2)"></ion-button>   
+              </ion-col>
+                
+              <ion-col>
+                <ion-button size="small" shape="round" fill='outline' ngClass='round-button' [color]="timeStatusArray[3]?'custgreen':'custgrey'" (click)="timerFunc(3)"></ion-button>
+              </ion-col>
+            </ion-row>   
+          </ion-col>
+
+          <ion-col size ='2' col-xl-2 col-lg-3 col-md-4>
+                <ion-toggle mode='md'  [(ngModel)] = 'timeToggle' (ngModelChange) = 'sunTimer()'  color="custgreen" class="tab2-toggle toggle-calm" ></ion-toggle>
+          </ion-col>  
+        </ion-row>
+
+        <ion-row style="height:30%"class = 'grid-nav' align='center'>
+            <ion-col size ='2' align='left' class="tab2-img-col">
+              <!-- change the src of the <ion-img> to change image -->
+              <ion-img class='tab2-body-img' src="assets/icon/wind.png"></ion-img>
+            </ion-col>
+      
+            <ion-col size ='8'>
+                    <div style="padding-top: 14%;" class="segment-padding">
+                        <ion-segment [(ngModel)]="fanSelect" color='custgrey' mode = 'ios'>
+                          <ion-segment-button (ionSelect)="fanSelectFunc('low')" mode = 'ios' value="low">
+                            Low
+                          </ion-segment-button>
+                          <ion-segment-button (ionSelect)="fanSelectFunc('medium')" mode = 'ios' value="medium">
+                            Medium
+                          </ion-segment-button>
+                          <ion-segment-button (ionSelect)="fanSelectFunc('high')" mode = 'ios' value="high">
+                            High
+                          </ion-segment-button>
+                        </ion-segment>
+                      </div>   
+                      <!-- <ion-radio-group color="warning"> -->
+                        <ion-row >                      
+                          <ion-col>
+                              <ion-button shape="round" size="small" fill='outline' ngClass='round-button' [color]="fanStatusArray[1]?'custgreen':'custgrey'" (click)="fanFunc(1)"></ion-button>   
+                          </ion-col>
+
+                          <ion-col>
+                              <ion-button shape="round" size="small" fill='outline' ngClass='round-button' [color]="fanStatusArray[2]?'custgreen':'custgrey'" (click)="fanFunc(2)"></ion-button>   
+                          </ion-col>
+                        </ion-row>   
+                      <!-- </ion-radio-group> -->
+
+              </ion-col>
+            <ion-col size ='2'>
+                <ion-toggle mode='md'  color="custgreen" [(ngModel)] = "fanToggle" (ionChange)="fanToggleFunc()" class="tab2-toggle" ></ion-toggle>
+            </ion-col>
+            
+          </ion-row>
+
+          <ion-row style="height:25%" class = 'grid-nav' align='center'>
+              <ion-col size ='2' align='left' class="tab2-img-col">
+                <!-- change the src of the <ion-img> to change image -->
+                <ion-img class='tab2-body-img' src="assets/icon/vintage-water-pump.png"></ion-img>
+              </ion-col>
+        
+              <ion-col size ='8'>
+                <div class="segment-padding" style="padding-top: 12%;">
+                    <ion-segment [(ngModel)]="pumpSelect" color='custgrey' mode = 'ios'>
+                      <ion-segment-button (ionSelect)="pumpSelectFunc('low')" mode = 'ios' value="low">
+                        Low
+                      </ion-segment-button>
+                      <ion-segment-button (ionSelect)="pumpSelectFunc('medium')" mode = 'ios' value="medium">
+                        Medium
+                      </ion-segment-button>
+                      <ion-segment-button (ionSelect)="pumpSelectFunc('high')" mode = 'ios' value="high">
+                        High
+                      </ion-segment-button>
+                    </ion-segment>
+                  </div>      
+              </ion-col>
+  
+              <ion-col size ='2'>
+                <div>
+                    <ion-toggle mode='md'  color="custgreen" [(ngModel)] = "pumpToggle" (ionChange)="pumpToggleFunc()" style="padding-top:66%;" class="tab2-toggle" ></ion-toggle>                       
+                </div> 
+              </ion-col>
+
+          </ion-row>
+
+          <ion-row style="height:10%"class = 'grid-nav' align='center'>
+            <ion-col size='4'></ion-col>
+            <ion-col size='4'> <ion-button  fill='outline' color="custgrey" (click)="setWifi()" >Reset Wifi</ion-button></ion-col>
+            <ion-col size='4'></ion-col>
+          </ion-row>
+  </ion-grid>
+</ion-content>
+
+ <!-- FOOTER CODE  -->
+ <ion-footer no-border style="height: 15%">
+  <ion-toolbar class = 'lower-nav'>
+      <ion-grid>
+          <ion-row >
+              <ion-col size='2' align='center' class="center-right">
+              </ion-col>
+              <ion-col size='6' align='center' class="center-right">
+                <div>
+                  <h1 style="margin-bottom: 0%;font-size: 7vw;" class="footer-h2"> <i>simple</i><b>PLANT</b></h1>
+                  <!-- the below a tag is for redirecting user to company website , to change website url go to redirect() function in tab2.page.ts -->
+                  <a style="font-size: 4vw;color: #5A9558;padding-right: 4.4vw;" (click)='redirect()'> www.simpleplant.de</a>
+                  <div style="width: 1vw;"></div>
+              </div>
+              </ion-col>
+              <ion-col size='4' class="center-left">
+                  <!-- the below a tag is for redirecting user to social media website , to change social media url go to facebook()/instagram() function in tab2.page.ts -->
+                  <ion-icon size="large" (click) = "facebook()" name="logo-facebook"></ion-icon> 
+                  <ion-icon size="large" (click) = "instagram()" name="logo-instagram"></ion-icon>
+              </ion-col>
+          </ion-row>
+      </ion-grid>
+    </ion-toolbar>
+</ion-footer>
