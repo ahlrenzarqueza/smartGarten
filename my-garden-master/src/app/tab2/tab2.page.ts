@@ -7,11 +7,14 @@ import { NetworkInterface } from '@ionic-native/network-interface/ngx';
 import { Router } from "@angular/router";
 // declare var WifiWizard2: any;
 import { Zeroconf } from "@ionic-native/zeroconf/ngx";
+import {LoadingController} from "@ionic/angular";
+
+declare var ble: any;
 
 @Component({
   selector: 'app-tab2',
   templateUrl: 'tab2.page.html',
-styleUrls: ['tab2.page.scss']
+  styleUrls: ['tab2.page.scss']
 })
 export class Tab2Page {
 
@@ -21,7 +24,8 @@ export class Tab2Page {
                 public networkInt:NetworkInterface,
                 private http:HttpClient,
                 private router:Router,
-                private zeroconf:Zeroconf
+                private zeroconf:Zeroconf,
+                private loadingController : LoadingController
                 ) {
     // var sunset = "12:00 am";
     
@@ -54,6 +58,12 @@ export class Tab2Page {
 
   sunrise:String = new Date().toISOString();
   
+  activeDevice = null;
+  activeDeviceName = null;
+  activeConnectionMode = 'wifi';
+  bt_peripheral = null;
+  pendingBtWritePrm = null;
+
   timeToggle;
   fanToggle;
   timeStatusArray:any = [];
@@ -71,7 +81,7 @@ export class Tab2Page {
   apiUrl: string;
   postJsonObj :any = {};
 
-  ionViewWillEnter()
+  async ionViewWillEnter()
   {
     // this.wifi_ip = "simplePlant.local";
     // if(this.platform.is('ios'))
@@ -86,16 +96,43 @@ export class Tab2Page {
     {
       this.storage.get('global_wifi_ip').then( val => {this.wifi_ip = val});
     }
+    this.activeConnectionMode = await this.storage.get('globalConnectionMode');
+    this.activeDeviceName = await this.storage.get('globalConnectedDevName');
+    this.activeDevice = await this.storage.get('globalConnectedDevice');
+    this.bt_peripheral = await this.storage.get('globalBtPeripheral');
   }
 
 
-  handleDataChangeApi(){
-    this.apiUrl = 'http://'+ this.wifi_ip + "/setData";
-    console.log("handleDataChangeApi",this.postJsonObj);
-    this.http.post(this.apiUrl, JSON.stringify(this.postJsonObj)).subscribe(data=>{
-      // alert(data)
-      console.log("data",data)
+  async showLoader() {
+    const loading = await this.loadingController.create({
+      message: 'Please Wait'
     });
+    await loading.present();
+  }
+ 
+  hideLoader() {
+    this.loadingController.dismiss();    
+  }
+
+
+  handleDataChangeApi (btdata = null){
+    if(this.activeConnectionMode == 'wifi') {
+      this.apiUrl = 'http://'+ this.wifi_ip + "/setData";
+      console.log("handleDataChangeApi",this.postJsonObj);
+      this.http.post(this.apiUrl, JSON.stringify(this.postJsonObj)).subscribe(data=>{
+        // alert(data)
+        console.log("data",data)
+      });
+    }
+    else {
+      if(!btdata) return console.log('BT Data Change Error : No data to write.');
+      const {id : device_id} = this.bt_peripheral;
+      const charObj = this.bt_peripheral.characteristics.find(function (e) {
+        return e.characteristic == "FFE1";
+      });
+      const {characteristic : charac_id, service : service_id} = charObj;
+      this.writeObjToBt(device_id, service_id, charac_id, btdata);
+    }
   }
 
   test()
@@ -105,6 +142,38 @@ export class Tab2Page {
     console.log(this.fan1);
   }
 
+  writeObjToBt (device_id, service_id, charac_id, btdata) {
+    const me = this;
+    var resolvePrm = null;
+    this.pendingBtWritePrm = new Promise(function (resolve) {
+      resolvePrm = resolve;
+    });
+    this.showLoader();
+    const datakeys = Object.keys(btdata);
+    const btWrite = function (index) {
+      const datakey = datakeys[index];
+      const writedata = me.stringToBytes(datakey + '=' + btdata[datakey].toString());
+      ble.write(device_id, service_id, charac_id, writedata, () => {
+        if(datakeys[index + 1]) 
+          setTimeout(function (e) { return btWrite(index + 1); }, 1000);
+        else setTimeout(function (e) { 
+          me.hideLoader(); 
+          resolvePrm();
+        }, 1000);
+      }, (error) => {
+        console.log('BT Write Data Error: ', error);
+        if(datakeys[index + 1]) 
+          setTimeout(function (e) { return btWrite(index + 1); }, 1000);
+        else setTimeout(function (e) { 
+          me.hideLoader(); 
+          resolvePrm();
+        }, 1000);
+      });
+    }
+
+    if(datakeys[0]) btWrite(0);
+  }
+
   sunsetFunc()
   {
     let dateObj = new Date(this.sunset.toString());
@@ -112,7 +181,11 @@ export class Tab2Page {
     this.postJsonObj["sun_set_hour"]=dateObj.getHours();
     this.postJsonObj["sun_set_min"]=dateObj.getMinutes();
     this.storage.set('sunset',this.sunset);
-    this.handleDataChangeApi();
+    const bt_set_obj = {
+      sshr: dateObj.getHours(),
+      ssmm: dateObj.getMinutes()
+    }
+    this.handleDataChangeApi(bt_set_obj);
   }
 
   sunriseFunc()
@@ -123,7 +196,11 @@ export class Tab2Page {
     this.postJsonObj["sun_rise_min"]=dateObj.getMinutes();
     console.log(this.sunrise);
     this.storage.set('sunrise',this.sunrise);
-    this.handleDataChangeApi();
+    const bt_set_obj = {
+      srhr: dateObj.getHours(),
+      srmm: dateObj.getMinutes()
+    }
+    this.handleDataChangeApi(bt_set_obj);
   }
 
   fanSelectFunc(data: String)
@@ -133,7 +210,10 @@ export class Tab2Page {
     this.storage.set('fanSelect',this.fanSelect);
     this.postJsonObj["fan_level"] = data;
     // alert(this.fanSelect);
-    this.handleDataChangeApi();
+    const bt_set_obj = {
+      fl: data
+    }
+    this.handleDataChangeApi(bt_set_obj);
   }
 
   pumpSelectFunc(data: String)
@@ -142,7 +222,10 @@ export class Tab2Page {
     this.storage.set('pumpSelect',this.pumpSelect);
     this.postJsonObj["pump_level"] = data;
     // alert(this.pumpSelect);
-    this.handleDataChangeApi();
+    const bt_set_obj = {
+      pl: data
+    }
+    this.handleDataChangeApi(bt_set_obj);
   }
 
   sunTimer()
@@ -151,14 +234,16 @@ export class Tab2Page {
     // console.log(event.checked)
     console.log(this.timeToggle);
     this.storage.set('timeToggle',this.timeToggle);
+    const bt_set_obj = {};
     for(var i=1; i<=3; i++){
       this.storage.set('timeToggle-'+i, this.timeToggle);
       this.timeStatusArray[i] = this.timeToggle;
       this.postJsonObj["light"+i] = this.timeToggle;
+      bt_set_obj['lt'+i] = this.timeToggle;
     }
     
     // alert(this.timeToggle);
-    this.handleDataChangeApi();
+    this.handleDataChangeApi(bt_set_obj);
   }
 
   checkSunTimer(){
@@ -194,13 +279,15 @@ export class Tab2Page {
   fanToggleFunc()
   {
     this.storage.set('fanToggle',this.fanToggle);
+    const bt_set_obj = {};
     for(var i=1; i<=2; i++){
       this.storage.set('fanToggle-'+i, this.fanToggle);
       this.fanStatusArray[i] = this.fanToggle;
       this.postJsonObj["fan"+i] = this.fanToggle;
+      bt_set_obj['ft'+i] = this.fanToggle;
     }
     // alert(this.timeToggle);
-    this.handleDataChangeApi();
+    this.handleDataChangeApi(bt_set_obj);
 
   }
   
@@ -209,7 +296,10 @@ export class Tab2Page {
     this.storage.set('pumpToggle',this.pumpToggle);
     this.postJsonObj["pump"] = this.pumpToggle;
     // alert(this.timeToggle);
-    this.handleDataChangeApi();
+    const bt_set_obj = {
+      pt: this.pumpToggle
+    };
+    this.handleDataChangeApi(bt_set_obj);
 
   }
 
@@ -221,7 +311,10 @@ export class Tab2Page {
       this.timeStatusArray[index] = !currentState;
       this.postJsonObj["light"+index] = !currentState;
       this.checkSunTimer();
-      this.handleDataChangeApi();
+      const bt_set_obj = {
+        ['lt'+index]: !currentState
+      };
+      this.handleDataChangeApi(bt_set_obj);
     });
     
   }
@@ -239,7 +332,10 @@ export class Tab2Page {
       this.fanStatusArray[index] = !currentState;
       this.postJsonObj["fan"+index] = !currentState;
       this.checkFanTimer();
-      this.handleDataChangeApi();
+      const bt_set_obj = {
+        ['ft'+index]: !currentState
+      };
+      this.handleDataChangeApi(bt_set_obj);
     });
   }
 
@@ -258,6 +354,13 @@ export class Tab2Page {
         // CHANGE THE LINK BELOW TO YOUR INSTAGRAM HOME PAGE URL
     this.iab.create('https://instagram.com', '_self');
   }
-  
+
+  stringToBytes(string) {
+    var array = new Uint8Array(string.length);
+    for (var i = 0, l = string.length; i < l; i++) {
+        array[i] = string.charCodeAt(i);
+     }
+     return array.buffer;
+  }
 
 }

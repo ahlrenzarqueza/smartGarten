@@ -38,6 +38,11 @@ const routes: Routes = [
         ]
       },
       {
+        path: 'backhome',
+        redirectTo: '/welcome',
+        pathMatch: 'full'
+      },
+      {
         path: '',
         redirectTo: '/tabs/tab1',
         pathMatch: 'full'

@@ -1,6 +1,11 @@
 <ion-tabs name='Tabs' style="border: 100px black" #myTabs>
 
   <ion-tab-bar slot="top" class='upper-nav' >
+    <ion-tab-button tab="backhome"  (click)="changeTab('backhome')">
+      <!-- CHANGE THE src OF THE BELOW ion-img TO THE IMAGE TO BE DISPLAYED ON THE TAB WHEN TAB1 IS UNSELECTED -->
+      <ion-img class='icon-img' src="assets/icon/new-icons8/home.png"></ion-img>
+    </ion-tab-button>
+
     <ion-tab-button tab="tab1"  (click)="changeTab('tab1')">
       <!-- CHANGE THE src OF THE BELOW ion-img TO THE IMAGE TO BE DISPLAYED ON THE TAB WHEN TAB1 IS UNSELECTED -->
       <ion-img *ngIf = "selectTab !=='tab1'" class='icon-img' src="assets/icon/Cube1.png"></ion-img>
@@ -21,10 +26,10 @@
     
     <ion-tab-button tab="tab3" (click)="changeTab('tab3')">
       <!-- CHANGE THE src OF THE BELOW ion-img TO THE IMAGE TO BE DISPLAYED ON THE TAB WHEN TAB3 IS UNSELECTED -->
-      <ion-img *ngIf = "selectTab !=='tab3'" style="margin-right: 2vw; margin-top: 2vh;width: 20vw;" class='icon-img' src="assets/icon/Info1.png"></ion-img>
+      <ion-img *ngIf = "selectTab !=='tab3'" style="margin-right: 2vw; margin-top: 2vh;width: 55px;" class='icon-img' src="assets/icon/Info1.png"></ion-img>
 
       <!-- CHANGE THE src OF THE BELOW ion-img TO THE IMAGE TO BE DISPLAYED ON THE TAB WHEN TAB3 IS SELECTED -->
-      <ion-img *ngIf = "selectTab ==='tab3'" style="margin-right: 2vw; margin-top: 2vh;width: 20vw;" class='icon-img' src="assets/icon/Info2.png"></ion-img>
+      <ion-img *ngIf = "selectTab ==='tab3'" style="margin-right: 2vw; margin-top: 2vh;width: 55px;" class='icon-img' src="assets/icon/Info2.png"></ion-img>
     </ion-tab-button>
   </ion-tab-bar>
 

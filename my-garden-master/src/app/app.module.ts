@@ -17,6 +17,9 @@ import { Platform } from "@ionic/angular";
 import { NetworkInterface } from '@ionic-native/network-interface/ngx';
 import { OpenNativeSettings } from '@ionic-native/open-native-settings/ngx';
 import { Zeroconf } from "@ionic-native/zeroconf/ngx";
+import { BLE } from '@ionic-native/ble/ngx';
+import { WifiWizard2 } from '@ionic-native/wifi-wizard-2/ngx';
+import { Geolocation } from '@ionic-native/geolocation/ngx';
 @NgModule({
   declarations: [AppComponent],
   entryComponents: [],
@@ -32,7 +35,10 @@ import { Zeroconf } from "@ionic-native/zeroconf/ngx";
     NetworkInterface,
     Zeroconf,
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
-    OpenNativeSettings
+    OpenNativeSettings,
+    BLE,
+    WifiWizard2,
+    Geolocation
   ],
   bootstrap: [AppComponent]
 })

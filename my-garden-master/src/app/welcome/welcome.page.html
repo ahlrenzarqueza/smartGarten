@@ -6,7 +6,7 @@
 
 <ion-content no-bounce style="overflow: hidden;">
   <ion-grid style="padding:0%;height:100%">
-    <ion-row align='center' style="height:15%">
+    <ion-row align='center' style="height:10%">
         
     </ion-row>
     
@@ -17,26 +17,57 @@
       </ion-col>
     </ion-row>
 
-    <ion-row align='center' style="height:15%">
+    <ion-row align='center' style="height:10%">
         
     </ion-row>
 
-    <ion-row align='center' *ngIf="osCheck">
+    <ion-row align='center'>
       <!-- <ion-col size='1'></ion-col> -->
       <ion-col size='12'>
-        <!-- <h1><b>Find my Garden</b></h1> -->
-        <ion-item>
-          <ion-label  *ngIf = "selected_wifi == null" class="device-select-header">Find Your Garden</ion-label>
-          <ion-select  [(ngModel)] = 'selected_wifi'>
+        <h1><b>Select Garden</b></h1>
+        <ion-radio-group value="wifi" (ionChange)="onConnModeChange($event)">
+          <ion-grid style="padding:0%;height:auto">
+            <ion-row>
+              <ion-list-header>
+                <ion-label>Connection mode:</ion-label>
+              </ion-list-header>
+            </ion-row>
+            <ion-row>
+              <ion-col size='6'>
+                <ion-item lines="none">
+                  <ion-label>Wi-Fi</ion-label>
+                  <ion-radio slot="start" value="wifi"></ion-radio>
+                </ion-item>
+              </ion-col>
+              <ion-col size='6'>
+                <ion-item lines="none">
+                  <ion-label>Bluetooth</ion-label>
+                  <ion-radio slot="start" value="bluetooth"></ion-radio>
+                </ion-item>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
+        </ion-radio-group>
+        <ion-item *ngIf = "connectionMode == 'wifi'">
+          <ion-label  *ngIf = "selected_wifi == null" class="device-select-header">Choose a Wi-Fi Garden</ion-label>
+          <ion-label  *ngIf = "selected_wifi" class="device-select-header">{{selected_wifi}}</ion-label>
+          <ion-select  [(ngModel)] = 'selected_wifi' [disabled]='!osCheck'>
             <ion-select-option [value] = 'device.SSID' *ngFor='let device of devices'>{{device.SSID}}</ion-select-option>
           </ion-select>
-        </ion-item>       
+        </ion-item>    
+        <ion-item *ngIf = "connectionMode == 'bluetooth'">
+          <ion-label  *ngIf = "selected_bt == null" class="device-select-header">Choose a Garden Bluetooth device</ion-label>
+          <ion-label  *ngIf = "selected_bt" class="device-select-header">{{selected_bt_name}}</ion-label>
+          <ion-select  [(ngModel)] = 'selected_bt' (ionChange)='onBtDeviceChange($event)'>
+            <ion-select-option [value] = 'device' *ngFor='let device of btdevices'>{{device.name ? device.name : device.id}}</ion-select-option>
+          </ion-select>
+        </ion-item>      
       </ion-col>
       <!-- <ion-col size='1'></ion-col> -->
 
     </ion-row>
     
-    <ion-row align='center' *ngIf="osCheck">
+    <ion-row align='center'>
         <ion-col size='3'></ion-col>
         <ion-col size='6'>
             <ion-button color='custgreen' (click) = "connect()">Connect!</ion-button>
@@ -47,7 +78,7 @@
 </ion-content>
           
 <!-- FOOTER CODE  -->
-<ion-footer no-border style="height: 15%">
+<ion-footer no-border style="height: 100px">
   <ion-toolbar class = 'lower-nav'>
       <ion-grid>
           <ion-row >

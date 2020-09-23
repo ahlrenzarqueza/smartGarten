@@ -9,8 +9,11 @@ import { Platform } from '@ionic/angular';
 import {LoadingController} from "@ionic/angular"
 import { AlertController } from "@ionic/angular";
 import { OpenNativeSettings } from '@ionic-native/open-native-settings/ngx';
+import { Geolocation } from '@ionic-native/geolocation/ngx';
+import { WifiWizard2 } from '@ionic-native/wifi-wizard-2/ngx';
 
-declare var WifiWizard2: any;
+// declare var WifiWizard2: any;
+declare var ble: any;
 // declare var networkCheck: any;
 @Component({
   selector: 'app-welcome',
@@ -23,11 +26,13 @@ export class WelcomePage implements OnInit {
     private diagnostic : Diagnostic,
     private iab: InAppBrowser,
     private locationAccuracy : LocationAccuracy, 
-    private storage : Storage,
+    public storage : Storage,
     private platform : Platform,
     private loadingController : LoadingController,
     private alertController : AlertController,
-    private openNativeSettings : OpenNativeSettings
+    private openNativeSettings : OpenNativeSettings,
+    private wifiwizard2 : WifiWizard2,
+    private geolocation: Geolocation
     ) 
    {
     // this.showLoader()
@@ -36,32 +41,36 @@ export class WelcomePage implements OnInit {
   //  this.storage.get('prevWifi').then((val)=>{this.prevWifi = val});
     
     this.osCheck = !this.platform.is('ios');
+    this.connectionMode = 'wifi';
    }
 
   ngOnInit() {
     
   }
+
   prevWifi:any;
   subscription: any;
   selected_wifi = null;
+  selected_bt = null;
+  selected_bt_id = null;
+  selected_bt_name = null;
   networkCheck:any;
   osCheck:any;
   loaderToShow:any;
+  btdevice:any;
+  connectionMode:'wifi'|'bluetooth';
 
 
    async showLoader() {
     const loading = await this.loadingController.create({
       message: 'Please Wait'
     });
-    // await loading.present();
-
-    console.log('Loading dismissed!');
+    await loading.present();
   }
  
   hideLoader() {
     this.loadingController.dismiss();    
   }
-
 
 
   ionViewDidLeave() {
@@ -70,17 +79,8 @@ export class WelcomePage implements OnInit {
  
   ionViewWillEnter()
   {
-    this.presentAlert('Please reboot your smart garden and connect to it then enter the  name and password of your Home Wifi when prompted!');
-    if(this.platform.is('android'))
-    {
-      this.enablocation();
-      this.checkNetworks();
-    }
-
-    if(this.platform.is('ios'))
-    {
-      this.iosCheckNetwork()
-    }
+    // this.presentAlert('Please reboot your smart garden and connect to it then enter the  name and password of your Home Wifi when prompted!');
+    this.initWifiConnection();
   }
 
   ionViewDidEnter(){
@@ -110,124 +110,199 @@ export class WelcomePage implements OnInit {
     this.hideLoader();
   }
 
-
-
-
-  iosConnect()
+  async iosConnect()
   {
     // this.router.navigateByUrl('/tabs');
-
-    WifiWizard2.getConnectedSSID()
-    .then( ssId => {
-      this.hideLoader();
-      clearInterval(this.networkCheck);
-      var tab = this.iab.create('http://10.0.1.1/wifi','_blank','location=true,toolbar=no,usewkwebview=yes');
-      tab.on('loadstop').subscribe(e=>{
-        if(e.url.indexOf('wifisave') != -1)
-        {
-          tab.close();
-          this.storage.set('wifiSetFlag','1');
-          this.router.navigateByUrl('/tabs');
-        }
-      });    
-    })
-    .catch( err => {
-        if(confirm('To connect to your garden please turn on your wifi and connect to garden wifi'))
-        {
-          this.openNativeSettings.open('wifi')
-          .then( val => {
-            console.log("Successfully opens setting");
-          })
-          .catch( err => {
-            console.log("failed to open setting", err);
-          })
-        }
-    })        
+    try {
+      var pos = await this.geolocation.getCurrentPosition();
+      if (pos) {
+        this.wifiwizard2.getConnectedSSID().then( ssId => {
+          this.selected_wifi = ssId; 
+        })
+        .catch( err => {
+          throw err;
+        })    
+      }
+      else throw new Error('Geolocation returned null');
+    }
+    catch (e) {
+      console.log('iOS Wi-Fi Get SSID Error: ', e);
+      if(confirm('To continue, please turn on your Wi-Fi and connect to Garden access point in Settings.'))
+      {
+        this.openNativeSettings.open('wifi')
+        .then( val => {
+          console.log("Successfully opened native settings.");
+        })
+        .catch( err => {
+          console.log("Failed to open native settings.", err);
+        })
+      }
+    }   
   }
 
   async iosCheckNetwork()
   {
     this.networkCheck = setInterval(()=>{this.iosConnect();},3000);
-
+    var isNotInitStart = await this.storage.get('iOSNotInitStart');
+    if(!isNotInitStart) {
+      await this.storage.set('iOSNotInitStart', true);
+      this.presentAlert('To select Garden via Wi-Fi, selection will depend on current connected Wi-Fi. To change, please configure in iOS Settings.',
+                  'Wi-Fi Garden Selection');
+    }
   }
 
- 
+  onConnModeChange(event)
+  {
+    if(!event.detail.value) return;
+    this.connectionMode = event.detail.value;
+    switch(this.connectionMode) {
+      case "wifi":
+        this.initWifiConnection();
+        break;
+      case "bluetooth":
+        this.initBtConnection();
+        break;
+    }
+  }
+
+  onBtDeviceChange(event) {
+    if(!event.detail.value) return;
+    this.selected_bt_id = event.detail.value.id;
+    this.selected_bt_name = event.detail.value.name;
+  }
   
   connect()
   {
     // this.router.navigateByUrl('/tabs');
-    if(this.selected_wifi != null)
-    {
-      this.presentAlertPrompt()
-    }else{
-      this.presentAlert("Please select a device to connect!")
+    if((this.connectionMode == 'wifi' && this.selected_wifi != null) ||
+      (this.connectionMode == 'bluetooth' && this.selected_bt != null)) {
+        this.presentAlertPrompt()
+    } else {
+      this.presentAlert("Please select a Garden device to connect.")
     }
+  }
+
+  initWifiConnection () {
+    ble.stopScan();
+    if(this.platform.is('android'))
+    {
+      this.enablocation();
+      this.checkNetworks();
+    }
+
+    if(this.platform.is('ios'))
+    {
+      this.iosCheckNetwork()
+    }
+  }
+
+  btdevices = [];
+  initBtConnection () {
+    this.btdevices = [];
+    ble.startScan([], 
+      newdevice => {
+        var existingDev = this.btdevices.find(dev => (dev.id == newdevice.id))
+        
+        if(!existingDev) this.btdevices.push(newdevice);
+        else {
+          existingDev.name = newdevice.name;
+        }
+      },
+      error => {
+        console.log('BT Scan devices error:', error);
+      }
+    )
+  
   }
 
 
   async presentAlertPrompt() {
-    const alert = await this.alertController.create({
-      header: 'Password!',
-      subHeader: 'Please provide password for '+this.selected_wifi+'. Or just press ok if this device is open',
-      inputs: [
-        {
-          name: 'password',
-          type: 'password',
-          placeholder: 'Password'
-        }
-      ],
-      buttons: [
-        {
-          text: 'Cancel',
-          role: 'cancel',
-          cssClass: 'secondary',
-          handler: () => {
-            console.log('Confirm Cancel');
+    const me = this;
+    if(this.platform.is('android') && this.connectionMode == 'wifi') {
+      const alert = await this.alertController.create({
+        header: 'Password!',
+        subHeader: 'Please provide password for '+this.selected_wifi+'. Or just press OK if this device is open (public Wi-Fi)',
+        inputs: [
+          {
+            name: 'password',
+            type: 'password',
+            placeholder: 'Password'
           }
-        }, {
-          text: 'Ok',
-          handler: (data) => {
-            this.showLoader()
-            let pass = data.password;
-            console.log(pass)
-            console.log(this.selected_wifi)
-            if(pass.length == 0)
-            {
-              WifiWizard2.connect(this.selected_wifi,true).then(()=>{this.connectionSuccess();}).catch((err)=>{console.log(err);this.presentAlert("Couldn't connect to the device. Check whether wifi is enabled!");});
-            }else{
-                    WifiWizard2.connect(this.selected_wifi,true,pass,"WPA").then(()=>{this.connectionSuccess();}).catch((err)=>{console.log(err);this.presentAlert("Couldn't connect to the device. Check whether wifi is enabled or password provided is correct!");});
-                }
-            console.log(data.password)
-            // this.presentAlert(data)
-            console.log('Confirm Ok');
+        ],
+        buttons: [
+          {
+            text: 'Cancel',
+            role: 'cancel',
+            cssClass: 'secondary',
+            handler: () => {
+              console.log('Confirm Cancel');
+            }
+          }, {
+            text: 'OK',
+            handler: (data) => {
+              this.showLoader();
+              let pass = data.password;
+              // console.log(pass)
+              // console.log(this.selected_wifi)
+              if(pass.length == 0)
+              {
+                this.wifiwizard2.connect(this.selected_wifi,true).then(()=>{this.connectionSuccess();}).catch((err)=>{console.log(err);this.presentAlert("Couldn't connect to the device. Check whether wifi is enabled!");});
+              } else{
+                this.wifiwizard2.connect(this.selected_wifi,true,pass,"WPA").then(()=>{this.connectionSuccess();}).catch((err)=>{console.log(err);this.presentAlert("Couldn't connect to the device. Check whether wifi is enabled or password provided is correct!");});
+              }
+              // console.log(data.password)
+              // this.presentAlert(data)
+              // console.log('Confirm Ok');
+            }
           }
-        }
-      ]
-    });
-
-    await alert.present();
+        ]
+      });
+      await alert.present();
+    }
+    else if (this.connectionMode == 'bluetooth') {
+      this.showLoader();
+      console.log('Connecting to BT device: ', this.selected_bt);
+      ble.autoConnect(this.selected_bt_id, function (peripheralObj) {
+        ble.stopScan();
+        me.storage.set('globalBtPeripheral', peripheralObj);
+        console.log('Connected to BT device with peripheral: ', JSON.stringify(peripheralObj));
+        me.connectionSuccess();
+      }, function () {
+        this.hideLoader();
+        this.presentAlert('Connection to selected bluetooth device failed. Please try connecting again.');
+      });
+    }
+    else {  
+      this.connectionSuccess();
+    }
   }
 
 
-  connectionSuccess()
+  connectionSuccess = async function ()
   {
-    // alert('Connected successfully to'+this.selected_wifi);
-    console.log('connected');
+    console.log('Connected to a Garden Device');
     this.hideLoader();
-    var tab = this.iab.create('http://10.0.1.1/wifi','_slef','location=no,toolbar=no');
-    tab.on('loadstop').subscribe(e=>{
-      if(e.url.indexOf('wifisave') != -1)
-      {
-        tab.close();
-        this.storage.set('wifiSetFlag','1');
-        this.router.navigateByUrl('/tabs');
-      }
-    });    
+    await this.storage.set('globalConnectionMode', this.connectionMode);
+    await this.storage.set('globalConnectedDevName', this.connectionMode == 'bluetooth' ? 
+    this.selected_bt_name : this.selected_wifi);
+    await this.storage.set('globalConnectedDevice', this.connectionMode == 'bluetooth' ? 
+      this.selected_bt : this.selected_wifi);
+    // var tab = this.iab.create('http://10.0.1.1/wifi','_slef','location=no,toolbar=no');
+    // tab.on('loadstop').subscribe(e=>{
+    //   if(e.url.indexOf('wifisave') != -1)
+    //   {
+    //     tab.close();
+    //     this.storage.set('wifiSetFlag','1');
+    //     this.router.navigateByUrl('/tabs');
+    //   }
+    // });
+    this.router.navigateByUrl('/tabs');    
   }
   
   errorHandler(err: any){
     alert(`Problem: ${err}`);
   }
+
   async checkNetworks()
   {
     this.networkCheck = setInterval(()=>{this.enablocation();this.listNetworks();},5000);
@@ -236,7 +311,7 @@ export class WelcomePage implements OnInit {
   devices = [];
   async listNetworks() {
     try {
-      let results = await WifiWizard2.scan();
+      let results = await this.wifiwizard2.scan();
       this.devices = results;
       // this.devices.forEach(device => {
       //   console.log(device.SSID, this.prevWifi);
@@ -245,10 +320,9 @@ export class WelcomePage implements OnInit {
       //     this.connect();
       //   }
       // })
-      console.log(this.devices);
     } catch (error) {
         // this.errorHandler(error);
-        console.log(error);
+        console.log('Wi-Fi scan devices error: ', error);
     }
   }
 

@@ -31,10 +31,12 @@
 }
 .top-header
 {
-    height: 15%;
+    height: 105px;
 }
 .upper-tab
 {
+    padding-top: 10px !important;
+    padding-bottom: 10px;
     border: #00000038 !important;
     border-bottom-style: dotted !important;
     height: 100%;
@@ -44,7 +46,7 @@
 {
     border-bottom: black 2px;
     border-bottom-style: solid;
-    height: 13vh;
+    height: 10vh;
 }
 
 .grid-nav
@@ -84,20 +86,32 @@
 .top-h1
 {
     font-size: 200%;
-    margin-top: 5%;
+}
+
+
+.tab1-top-label
+{
+    display: block;
+    margin-bottom: 0;
+    text-align: center;
 }
 
 .tab3-top-h1
 {
-        font-size: 6vw;
-        margin-bottom: 0%;
-        // font-size: 5vw;
+    font-size: 6vw;
+    margin-bottom: 0%;
+    // font-size: 5vw;
 }
 
 .tab3-top-h6
 {
     font-size: 4vw;
     margin: 0%;
+}
+
+.heading-guide-label {
+    color: gray;
+    font-weight: 600;
 }
 
 .row-div
@@ -121,9 +135,7 @@
 }
 .col-p
 {
-    font-size: 200%;
-    margin: 0%;
-    margin-top: 10%;
+    font-size: 26px;
 }
 
 ion-col
@@ -134,7 +146,7 @@ ion-col
 .icon-img
 {
     // height: 50%;
-    width: 15vw;
+    width: 40px;
     // padding-top: 63%;
 }
 
@@ -232,4 +244,32 @@ ion-content {
 h,h1,h2,h3,h4,h5,h6,p
 {
     color: black;
+}
+
+@font-face {
+    font-family: 'Josefin Slab';
+    src: url('/assets/fonts/Josefin_Slab/JosefinSlab-Regular.ttf');
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Josefin Slab';
+    src: url('/assets/fonts/Josefin_Slab/JosefinSlab-ExtraLight.ttf');
+    font-weight: 200;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Josefin Slab';
+    src: url('/assets/fonts/Josefin_Slab/JosefinSlab-SemiBold.ttf');
+    font-weight: 600;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Josefin Slab';
+    src: url('/assets/fonts/Josefin_Slab/JosefinSlab-Bold.ttf');
+    font-weight: 700;
+    font-style: normal;
 }
