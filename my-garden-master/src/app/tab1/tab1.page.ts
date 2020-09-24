@@ -9,6 +9,9 @@ import { Events } from '@ionic/angular';
 import { Zeroconf } from "@ionic-native/zeroconf/ngx";
 import { Storage } from '@ionic/storage';
 import { NgZone } from '@angular/core';
+import { AlertController } from "@ionic/angular";
+import * as AWS from 'aws-sdk';
+import creds from '../../assets/env.json';
 
 declare var WifiWizard2: any, ble: any;
 
@@ -34,36 +37,39 @@ export class Tab1Page {
     private _tabs: TabsPageModule,
     private events: Events,
     private zeroconf: Zeroconf,
-    private zone: NgZone
+    private zone: NgZone,
+    private alertController : AlertController
   ) {
     // this.zeroconf.registerAddressFamily = 'ipv4';
     // this.zeroconf.watchAddressFamily = 'ipv4'; 
 
     // TODO: What is the purpose of this. To remove for the meantime
-    console.log('below is zeroconf');
-    if (this.wifi_ip == null) {
-      if (this.platform.is('ios')) {
-        this.wifi_ip = "simpleplant.local";
-        this.storage.set('global_wifi_ip', this.wifi_ip);
-      } else {
-        this.zeroconf.watch('_http._tcp.', 'local.').subscribe(result => {
-          console.log(result);
-          var service = result.service;
-          if (result.action == 'resolved') {
-            if(service.name === "simpleplant"){
-              alert(result.service.ipv4Addresses[0]);
-              console.log(result);
-              this.wifi_ip = result.service.ipv4Addresses[0];
-              this.storage.set('global_wifi_ip', this.wifi_ip);
-            }            
-          } else {
-            console.log('service removed', result.service);
-          }
-        });
-      }
-    }
+    // console.log('below is zeroconf');
+    // if (this.wifi_ip == null) {
+    //   if (this.platform.is('ios')) {
+    //     this.wifi_ip = "simpleplant.local";
+    //     this.storage.set('global_wifi_ip', this.wifi_ip);
+    //   } else {
+    //     this.zeroconf.watch('_http._tcp.', 'local.').subscribe(result => {
+    //       console.log(result);
+    //       var service = result.service;
+    //       if (result.action == 'resolved') {
+    //         if(service.name === "simpleplant"){
+    //           alert(result.service.ipv4Addresses[0]);
+    //           console.log(result);
+    //           this.wifi_ip = result.service.ipv4Addresses[0];
+    //           this.storage.set('global_wifi_ip', this.wifi_ip);
+    //         }            
+    //       } else {
+    //         console.log('service removed', result.service);
+    //       }
+    //     });
+    //   }
+    // }
   }
 
+  awsiotdata:any = null;
+  awsiotEndpoint = null;
   activeDevice = null;
   activeDeviceName = null;
   activeConnectionMode = 'wifi';
@@ -95,6 +101,7 @@ export class Tab1Page {
   ngOnDestroy() {
     clearInterval(this.loopResult);
     // alert('page destroyed');
+    if(!this.bt_peripheral) return;
     const {id : device_id} = this.bt_peripheral;
     const charObj = this.bt_peripheral.characteristics.find(function (e) {
       return e.characteristic == "FFE1";
@@ -120,27 +127,36 @@ export class Tab1Page {
     this.bt_peripheral = await this.storage.get('globalBtPeripheral');
 
     if(this.activeConnectionMode == 'wifi') {
-      if (this.wifi_ip == null) {
-        if (this.platform.is('ios')) {
-          this.wifi_ip = "simpleplant.local";
-        } else {
-          this.zeroconf.watch('_http._tcp.', 'local.').subscribe(result => {
-            console.log(result);
-            var service = result.service;
-            if (result.action == 'resolved') {
-              if(service.name === "simpleplant"){
-                // alert(result.service.ipv4Addresses[0]);
-                console.log(result);
-                this.wifi_ip = result.service.ipv4Addresses[0];
-                this.storage.set('global_wifi_ip', this.wifi_ip);
-              }            
-            } else {
-              console.log('service removed', result.service);
-            }
-          });
-        }
-      }
+      this.awsiotEndpoint = await this.storage.get('awsiotEndpoint');
+      this.awsiotdata = new AWS.IotData({
+        endpoint: this.awsiotEndpoint,
+        apiVersion: '2015-05-28'
+      }); 
     }
+
+    // TODO : Deprecated code
+    // if(this.activeConnectionMode == 'wifi') {
+    //   if (this.wifi_ip == null) {
+    //     if (this.platform.is('ios')) {
+    //       this.wifi_ip = "simpleplant.local";
+    //     } else {
+    //       this.zeroconf.watch('_http._tcp.', 'local.').subscribe(result => {
+    //         console.log(result);
+    //         var service = result.service;
+    //         if (result.action == 'resolved') {
+    //           if(service.name === "simpleplant"){
+    //             // alert(result.service.ipv4Addresses[0]);
+    //             console.log(result);
+    //             this.wifi_ip = result.service.ipv4Addresses[0];
+    //             this.storage.set('global_wifi_ip', this.wifi_ip);
+    //           }            
+    //         } else {
+    //           console.log('service removed', result.service);
+    //         }
+    //       });
+    //     }
+    //   }
+    // }
 
     // this.wifi_ip = "simplePlant.local";
     // if(this.platform.is('ios'))
@@ -159,21 +175,45 @@ export class Tab1Page {
   async getResults() {
     const me = this;
     if(this.activeConnectionMode == 'wifi') {
-      // TODO: For Wi-Fi Get Results
-      console.log('http://' + this.wifi_ip + "/getData");
-      this.apiUrl = 'http://' + this.wifi_ip + "/getData";
-      // this.apiUrl ="http://192.168.4.1/getData";
-      // alert(this.apiUrl);
-      if (this.wifi_ip) {
-        this.http.get(this.apiUrl).subscribe(data => {
-          // alert(data)
-          console.log("data", data)
-          this.airtemp = data["temparature"];
-          this.humid = data["humidity"];
-          this.waterlevel = data["waterlevel"];
-          this.phValue = data["phvalue"];
-        });
-      }
+      // TODO: Deprecated For Wi-Fi Get Results
+      // console.log('http://' + this.wifi_ip + "/getData");
+      // this.apiUrl = 'http://' + this.wifi_ip + "/getData";
+      // // this.apiUrl ="http://192.168.4.1/getData";
+      // // alert(this.apiUrl);
+      // if (this.wifi_ip) {
+      //   this.http.get(this.apiUrl).subscribe(data => {
+      //     // alert(data)
+      //     console.log("data", data)
+      //     this.airtemp = data["temparature"];
+      //     this.humid = data["humidity"];
+      //     this.waterlevel = data["waterlevel"];
+      //     this.phValue = data["phvalue"];
+      //   });
+      // }
+
+      //AWS IOT DATA
+      var params = {
+        thingName: this.activeDevice, /* required */
+        shadowName: 'Measurements'
+      };
+      me.awsiotdata.getThingShadow(params, function(err, data) {
+        if (err) {
+          console.log('AWS IOT Connection Error:', err);
+          this.presentAlert('Error in getting measurements. Please reconnect to a device again.', 'AWS IOT Connection Error');
+          this.router.navigateByUrl('welcome');
+        }
+        else {
+          const shadowdt = JSON.parse(data.payload);
+          console.log('AWS IoT State', shadowdt);
+          const state = shadowdt.state;
+          me.airtemp = parseFloat(state.reported.airTemperature);
+          me.humid = parseFloat(state.reported.humidity);
+          me.phValue = parseFloat(state.reported.phValue);
+          me.ecValue = parseFloat(state.reported.ecValue);
+          me.waterlevel = parseFloat(state.reported.waterLevel);
+          me.watertemp = parseFloat(state.reported.waterTemperature);
+        }
+      });
     }
     else {
       const {id : device_id} = this.bt_peripheral;
@@ -258,6 +298,17 @@ export class Tab1Page {
         array[i] = string.charCodeAt(i);
      }
      return array.buffer;
+  }
+
+  async presentAlert(message:string, title:string = 'Alert') {
+    const alert = await this.alertController.create({
+      header: title,
+      // subHeader: subTitle,
+      message: message,
+      buttons: ['OK']
+    });
+
+    await alert.present();
   }
 
 

@@ -31,9 +31,11 @@ export class AppComponent {
     this.platform.ready().then(() => {
       this.statusBar.hide();
       this.splashScreen.hide();
-      this.router.navigateByUrl('/tabs');
+      // this.router.navigateByUrl('/tabs');
       // this.storage.get('wifiSetFlag').then(val=>{(val == null)?this.router.navigateByUrl('/welcome'):this.router.navigateByUrl('/tabs')})
       // this.router.navigateByUrl('/tabs')
+
+      this.router.navigateByUrl('/welcome');
     });
   }
 }

@@ -1,6 +1,8 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { TabsPage } from './tabs.page';
+import { WelcomePage } from '../welcome/welcome.page';
+// import {WelcomePageModule} from '../welcome/welcome.module';
 
 const routes: Routes = [
   {
@@ -36,11 +38,6 @@ const routes: Routes = [
               import('../tab3/tab3.module').then(m => m.Tab3PageModule)
           }
         ]
-      },
-      {
-        path: 'backhome',
-        redirectTo: '/welcome',
-        pathMatch: 'full'
       },
       {
         path: '',

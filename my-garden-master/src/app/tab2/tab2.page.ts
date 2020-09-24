@@ -8,6 +8,9 @@ import { Router } from "@angular/router";
 // declare var WifiWizard2: any;
 import { Zeroconf } from "@ionic-native/zeroconf/ngx";
 import {LoadingController} from "@ionic/angular";
+import { AlertController } from "@ionic/angular";
+import * as AWS from 'aws-sdk';
+import creds from '../../assets/env.json';
 
 declare var ble: any;
 
@@ -25,7 +28,8 @@ export class Tab2Page {
                 private http:HttpClient,
                 private router:Router,
                 private zeroconf:Zeroconf,
-                private loadingController : LoadingController
+                private loadingController : LoadingController,
+                private alertController : AlertController
                 ) {
     // var sunset = "12:00 am";
     
@@ -54,10 +58,11 @@ export class Tab2Page {
   }
 
   
-  sunset:String = new Date().toISOString();
-
-  sunrise:String = new Date().toISOString();
+  sunset:any = new Date().toISOString();
+  sunrise:any = new Date().toISOString();
   
+  awsiotdata:any = null;
+  awsiotEndpoint = null;
   activeDevice = null;
   activeDeviceName = null;
   activeConnectionMode = 'wifi';
@@ -66,8 +71,8 @@ export class Tab2Page {
 
   timeToggle;
   fanToggle;
-  timeStatusArray:any = [];
-  fanStatusArray:any = [];
+  timeStatusArray:any = [null, false, false, false];
+  fanStatusArray:any = [null, false, false];
   pumpToggle;
   fanSelect;
   pumpSelect;
@@ -92,14 +97,55 @@ export class Tab2Page {
     //   this.wifi_ip = "192.168.43.189";
     //   // WifiWizard2.getWifiRouterIP().then((ip)=>{this.wifi_ip = ip;}).catch((err)=>{alert(err);});
     // }
-    if(this.wifi_ip == null)
-    {
-      this.storage.get('global_wifi_ip').then( val => {this.wifi_ip = val});
-    }
+    // if(this.wifi_ip == null)
+    // {
+    //   this.storage.get('global_wifi_ip').then( val => {this.wifi_ip = val});
+    // }
     this.activeConnectionMode = await this.storage.get('globalConnectionMode');
     this.activeDeviceName = await this.storage.get('globalConnectedDevName');
     this.activeDevice = await this.storage.get('globalConnectedDevice');
     this.bt_peripheral = await this.storage.get('globalBtPeripheral');
+
+    if(this.activeConnectionMode == 'wifi') {
+      const me = this;
+      this.awsiotEndpoint = await this.storage.get('awsiotEndpoint');
+      this.awsiotdata = new AWS.IotData({
+        endpoint: this.awsiotEndpoint,
+        apiVersion: '2015-05-28'
+      }); 
+      var params = {
+        thingName: this.activeDevice, /* required */
+        shadowName: 'Settings'
+      };
+      this.awsiotdata.getThingShadow(params, function(err, data) {
+        if (err) {
+          console.log('AWS IOT Connection Error:', err);
+          me.presentAlert('Error in getting settings. Please reconnect to a device again.', 'AWS IOT Connection Error');
+          me.router.navigateByUrl('welcome');
+        }
+        else {
+          const shadowdt = JSON.parse(data.payload);
+          console.log('AWS IoT State', shadowdt);
+          const state = shadowdt.state;
+          me.fanSelect = state.reported.fanLevel;
+          me.pumpSelect = state.reported.pumpLevel;
+          me.fanStatusArray[1] = state.reported['fan1-enabled'];
+          me.fanStatusArray[2] = state.reported['fan2-enabled'];
+          me.timeStatusArray[1] = state.reported['light1-enabled'];
+          me.timeStatusArray[2] = state.reported['light2-enabled'];
+          me.timeStatusArray[3] = state.reported['light3-enabled'];
+          me.pumpToggle = state.reported['pump-enabled'];
+          var sunrisetime = new Date();
+          sunrisetime.setHours(state.reported['sunrise-hr']);
+          sunrisetime.setMinutes(state.reported['sunrise-min']);
+          var sunsettime = new Date();
+          sunsettime.setHours(state.reported['sunset-hr']);
+          sunsettime.setMinutes(state.reported['sunset-min']);
+          this.sunrise = sunrisetime;
+          this.sunset = sunsettime;
+        }
+      });
+    }
   }
 
 
@@ -116,12 +162,48 @@ export class Tab2Page {
 
 
   handleDataChangeApi (btdata = null){
+    const me = this;
     if(this.activeConnectionMode == 'wifi') {
-      this.apiUrl = 'http://'+ this.wifi_ip + "/setData";
-      console.log("handleDataChangeApi",this.postJsonObj);
-      this.http.post(this.apiUrl, JSON.stringify(this.postJsonObj)).subscribe(data=>{
-        // alert(data)
-        console.log("data",data)
+      // this.apiUrl = 'http://'+ this.wifi_ip + "/setData";
+      // console.log("handleDataChangeApi",this.postJsonObj);
+      // this.http.post(this.apiUrl, JSON.stringify(this.postJsonObj)).subscribe(data=>{
+      //   // alert(data)
+      //   console.log("data",data)
+      // });
+      const sunrisedate = new Date(this.sunrise);
+      const sunsetdate = new Date(this.sunset);
+      const state = {
+        state: {
+          reported: {
+            "fanLevel": this.fanSelect,
+            "pumpLevel": this.pumpSelect,
+            "fan1-enabled": this.fanStatusArray[1],
+            "fan2-enabled": this.fanStatusArray[2],
+            "light1-enabled": this.timeStatusArray[1],
+            "light2-enabled": this.timeStatusArray[2],
+            "light3-enabled": this.timeStatusArray[3],
+            "pump-enabled": this.pumpToggle,
+            "sunrise-hr": sunrisedate.getHours(),
+            "sunrise-min": sunrisedate.getMinutes(),
+            "sunset-hr": sunsetdate.getHours(),
+            "sunset-min": sunsetdate.getMinutes()
+          }
+        }
+      }
+      var params = {
+        payload: JSON.stringify(state),
+        thingName: this.activeDevice,
+        shadowName: 'Settings'
+      };
+      this.awsiotdata.updateThingShadow(params, function(err, data) {
+        if(err) {
+          console.log('AWS IOT Connection Error:', err);
+          me.presentAlert('Error in publishing garden set-up. Please reconnect to a device again.', 'AWS IOT Connection Error');
+          me.router.navigateByUrl('welcome');
+        }
+        else {
+          console.log('AWS IOT Updated State:', state);
+        }
       });
     }
     else {
@@ -361,6 +443,17 @@ export class Tab2Page {
         array[i] = string.charCodeAt(i);
      }
      return array.buffer;
+  }
+
+  async presentAlert(message:string, title:string = 'Alert') {
+    const alert = await this.alertController.create({
+      header: title,
+      // subHeader: subTitle,
+      message: message,
+      buttons: ['OK']
+    });
+
+    await alert.present();
   }
 
 }

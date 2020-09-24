@@ -35,7 +35,7 @@
             <ion-row>
               <ion-col size='6'>
                 <ion-item lines="none">
-                  <ion-label>Wi-Fi</ion-label>
+                  <ion-label>IoT</ion-label>
                   <ion-radio slot="start" value="wifi"></ion-radio>
                 </ion-item>
               </ion-col>
@@ -49,16 +49,14 @@
           </ion-grid>
         </ion-radio-group>
         <ion-item *ngIf = "connectionMode == 'wifi'">
-          <ion-label  *ngIf = "selected_wifi == null" class="device-select-header">Choose a Wi-Fi Garden</ion-label>
-          <ion-label  *ngIf = "selected_wifi" class="device-select-header">{{selected_wifi}}</ion-label>
-          <ion-select  [(ngModel)] = 'selected_wifi' [disabled]='!osCheck'>
-            <ion-select-option [value] = 'device.SSID' *ngFor='let device of devices'>{{device.SSID}}</ion-select-option>
+          <ion-label class="device-select-header">Choose an IoT Garden Device</ion-label>
+          <ion-select placeholder="Choose an IoT Garden Device" [(ngModel)] = 'selected_wifi' style="width: 100%; max-width: unset;">
+            <ion-select-option [value] = 'device' *ngFor='let device of devices'>{{device}}</ion-select-option>
           </ion-select>
         </ion-item>    
         <ion-item *ngIf = "connectionMode == 'bluetooth'">
-          <ion-label  *ngIf = "selected_bt == null" class="device-select-header">Choose a Garden Bluetooth device</ion-label>
-          <ion-label  *ngIf = "selected_bt" class="device-select-header">{{selected_bt_name}}</ion-label>
-          <ion-select  [(ngModel)] = 'selected_bt' (ionChange)='onBtDeviceChange($event)'>
+          <ion-label  class="device-select-header">Choose a Garden Bluetooth device</ion-label>
+          <ion-select placeholder="Choose a Garden Bluetooth device" [(ngModel)] = 'selected_bt' (ionChange)='onBtDeviceChange($event)' style="width: 100%; max-width: unset;">
             <ion-select-option [value] = 'device' *ngFor='let device of btdevices'>{{device.name ? device.name : device.id}}</ion-select-option>
           </ion-select>
         </ion-item>      

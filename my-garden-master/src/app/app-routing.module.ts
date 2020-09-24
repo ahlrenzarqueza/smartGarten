@@ -11,7 +11,8 @@ const routes: Routes = [
   },
   {
     path: 'welcome',
-    loadChildren:  ()=> import('./welcome/welcome.module').then(m=>m.WelcomePageModule)
+    loadChildren:  ()=> import('./welcome/welcome.module').then(m=>m.WelcomePageModule),
+    pathMatch: 'full'
   }
   // { path: 'welcome', loadChildren: './welcome/welcome.module#WelcomePageModule' }
 ];

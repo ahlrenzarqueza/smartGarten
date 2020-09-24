@@ -11,10 +11,11 @@ import { AlertController } from "@ionic/angular";
 import { OpenNativeSettings } from '@ionic-native/open-native-settings/ngx';
 import { Geolocation } from '@ionic-native/geolocation/ngx';
 import { WifiWizard2 } from '@ionic-native/wifi-wizard-2/ngx';
+import { HttpClient } from '@angular/common/http';
+import * as AWS from 'aws-sdk';
+import creds from '../../assets/env.json';
 
-// declare var WifiWizard2: any;
 declare var ble: any;
-// declare var networkCheck: any;
 @Component({
   selector: 'app-welcome',
   templateUrl: './welcome.page.html',
@@ -32,22 +33,25 @@ export class WelcomePage implements OnInit {
     private alertController : AlertController,
     private openNativeSettings : OpenNativeSettings,
     private wifiwizard2 : WifiWizard2,
-    private geolocation: Geolocation
+    private geolocation: Geolocation,
+    private http: HttpClient
     ) 
    {
     // this.showLoader()
     // this.storage.set('name','chintan');
     // this.storage.get('test').then((val)=>{alert(val)});
   //  this.storage.get('prevWifi').then((val)=>{this.prevWifi = val});
-    
     this.osCheck = !this.platform.is('ios');
     this.connectionMode = 'wifi';
    }
 
   ngOnInit() {
-    
-  }
 
+  }
+  awsiotEndpoint:any;
+  awsiot:any;
+  awsiotdata:any;
+  iotApi:any = 'https://1ki06byvn9.execute-api.ap-southeast-1.amazonaws.com/live/';
   prevWifi:any;
   subscription: any;
   selected_wifi = null;
@@ -61,15 +65,20 @@ export class WelcomePage implements OnInit {
   connectionMode:'wifi'|'bluetooth';
 
 
-   async showLoader() {
+  async showLoader() {
     const loading = await this.loadingController.create({
       message: 'Please Wait'
     });
-    await loading.present();
+    return await loading.present();
   }
  
-  hideLoader() {
-    this.loadingController.dismiss();    
+  async hideLoader() {
+    try {
+      return await this.loadingController.dismiss();   
+    } 
+    catch(e) {
+      return
+    }
   }
 
 
@@ -79,13 +88,65 @@ export class WelcomePage implements OnInit {
  
   ionViewWillEnter()
   {
-    // this.presentAlert('Please reboot your smart garden and connect to it then enter the  name and password of your Home Wifi when prompted!');
-    this.initWifiConnection();
+    // const me = this;
+    // AWS.config.update(creds);
+    // this.awsiot = new AWS.Iot({apiVersion: '2015-05-28'});
+    // this.showLoader();
+    // this.awsiot.describeEndpoint({endpointType: 'iot:Data-ATS'}, function(err, data) {
+    //   if (err) {
+    //     me.hideLoader();
+    //     me.presentAlert('Please connect to a working internet connection.');
+    //     me.openNativeSettings.open('wifi')
+    //     .then( val => {
+    //       console.log("Successfully opened native settings.");
+    //     })
+    //     .catch( err => {
+    //       console.log("Failed to open native settings.", err);
+    //     })
+    //   }
+    //   else {
+    //     me.awsiotEndpoint = data.endpointAddress;
+    //     me.storage.set('awsiotEndpoint', data.endpointAddress);
+    //     me.awsiotdata = new AWS.IotData({
+    //       endpoint: data.endpointAddress,
+    //       apiVersion: '2015-05-28'
+    //     }); 
+    //     me.initWifiConnection();
+    //     me.hideLoader();
+    //   }
+    // });
   }
 
-  ionViewDidEnter(){
+  async ionViewDidEnter(){
+    const me = this;
     this.subscription = this.platform.backButton.subscribe(()=>{
         navigator['app'].exitApp();
+    });
+    AWS.config.update(creds);
+    this.awsiot = new AWS.Iot({apiVersion: '2015-05-28'});
+    await this.showLoader();
+    this.awsiot.describeEndpoint({endpointType: 'iot:Data-ATS'}, function(err, data) {
+      if (err) {
+        me.hideLoader();
+        me.presentAlert('Please connect to a working internet connection.');
+        me.openNativeSettings.open('wifi')
+        .then( val => {
+          console.log("Successfully opened native settings.");
+        })
+        .catch( err => {
+          console.log("Failed to open native settings.", err);
+        })
+      }
+      else {
+        me.awsiotEndpoint = data.endpointAddress;
+        me.storage.set('awsiotEndpoint', data.endpointAddress);
+        me.awsiotdata = new AWS.IotData({
+          endpoint: data.endpointAddress,
+          apiVersion: '2015-05-28'
+        }); 
+        me.initWifiConnection();
+        me.hideLoader();
+      }
     });
   }
 
@@ -174,6 +235,7 @@ export class WelcomePage implements OnInit {
   connect()
   {
     // this.router.navigateByUrl('/tabs');
+    debugger
     if((this.connectionMode == 'wifi' && this.selected_wifi != null) ||
       (this.connectionMode == 'bluetooth' && this.selected_bt != null)) {
         this.presentAlertPrompt()
@@ -183,17 +245,21 @@ export class WelcomePage implements OnInit {
   }
 
   initWifiConnection () {
-    ble.stopScan();
-    if(this.platform.is('android'))
-    {
-      this.enablocation();
-      this.checkNetworks();
-    }
+    try {
+      if(ble) ble.stopScan();
+    } catch(e) {}
+    // if(this.platform.is('android'))
+    // {
 
-    if(this.platform.is('ios'))
-    {
-      this.iosCheckNetwork()
-    }
+      // this.enablocation();
+      // this.checkNetworks();
+    // }
+
+    // if(this.platform.is('ios'))
+    // {
+    //   this.iosCheckNetwork()
+    // }
+    this.listNetworks();
   }
 
   btdevices = [];
@@ -218,48 +284,48 @@ export class WelcomePage implements OnInit {
 
   async presentAlertPrompt() {
     const me = this;
-    if(this.platform.is('android') && this.connectionMode == 'wifi') {
-      const alert = await this.alertController.create({
-        header: 'Password!',
-        subHeader: 'Please provide password for '+this.selected_wifi+'. Or just press OK if this device is open (public Wi-Fi)',
-        inputs: [
-          {
-            name: 'password',
-            type: 'password',
-            placeholder: 'Password'
-          }
-        ],
-        buttons: [
-          {
-            text: 'Cancel',
-            role: 'cancel',
-            cssClass: 'secondary',
-            handler: () => {
-              console.log('Confirm Cancel');
-            }
-          }, {
-            text: 'OK',
-            handler: (data) => {
-              this.showLoader();
-              let pass = data.password;
-              // console.log(pass)
-              // console.log(this.selected_wifi)
-              if(pass.length == 0)
-              {
-                this.wifiwizard2.connect(this.selected_wifi,true).then(()=>{this.connectionSuccess();}).catch((err)=>{console.log(err);this.presentAlert("Couldn't connect to the device. Check whether wifi is enabled!");});
-              } else{
-                this.wifiwizard2.connect(this.selected_wifi,true,pass,"WPA").then(()=>{this.connectionSuccess();}).catch((err)=>{console.log(err);this.presentAlert("Couldn't connect to the device. Check whether wifi is enabled or password provided is correct!");});
-              }
-              // console.log(data.password)
-              // this.presentAlert(data)
-              // console.log('Confirm Ok');
-            }
-          }
-        ]
-      });
-      await alert.present();
-    }
-    else if (this.connectionMode == 'bluetooth') {
+    // if(this.platform.is('android') && this.connectionMode == 'wifi') {
+    //   const alert = await this.alertController.create({
+    //     header: 'Password!',
+    //     subHeader: 'Please provide password for '+this.selected_wifi+'. Or just press OK if this device is open (public Wi-Fi)',
+    //     inputs: [
+    //       {
+    //         name: 'password',
+    //         type: 'password',
+    //         placeholder: 'Password'
+    //       }
+    //     ],
+    //     buttons: [
+    //       {
+    //         text: 'Cancel',
+    //         role: 'cancel',
+    //         cssClass: 'secondary',
+    //         handler: () => {
+    //           console.log('Confirm Cancel');
+    //         }
+    //       }, {
+    //         text: 'OK',
+    //         handler: (data) => {
+    //           this.showLoader();
+    //           let pass = data.password;
+    //           // console.log(pass)
+    //           // console.log(this.selected_wifi)
+    //           if(pass.length == 0)
+    //           {
+    //             this.wifiwizard2.connect(this.selected_wifi,true).then(()=>{this.connectionSuccess();}).catch((err)=>{console.log(err);this.presentAlert("Couldn't connect to the device. Check whether wifi is enabled!");});
+    //           } else{
+    //             this.wifiwizard2.connect(this.selected_wifi,true,pass,"WPA").then(()=>{this.connectionSuccess();}).catch((err)=>{console.log(err);this.presentAlert("Couldn't connect to the device. Check whether wifi is enabled or password provided is correct!");});
+    //           }
+    //           // console.log(data.password)
+    //           // this.presentAlert(data)
+    //           // console.log('Confirm Ok');
+    //         }
+    //       }
+    //     ]
+    //   });
+    //   await alert.present();
+    // }
+    if (this.connectionMode == 'bluetooth') {
       this.showLoader();
       console.log('Connecting to BT device: ', this.selected_bt);
       ble.autoConnect(this.selected_bt_id, function (peripheralObj) {
@@ -280,6 +346,7 @@ export class WelcomePage implements OnInit {
 
   connectionSuccess = async function ()
   {
+    debugger
     console.log('Connected to a Garden Device');
     this.hideLoader();
     await this.storage.set('globalConnectionMode', this.connectionMode);
@@ -296,7 +363,7 @@ export class WelcomePage implements OnInit {
     //     this.router.navigateByUrl('/tabs');
     //   }
     // });
-    this.router.navigateByUrl('/tabs');    
+    this.router.navigateByUrl('/tabs/tab1');    
   }
   
   errorHandler(err: any){
@@ -305,13 +372,16 @@ export class WelcomePage implements OnInit {
 
   async checkNetworks()
   {
-    this.networkCheck = setInterval(()=>{this.enablocation();this.listNetworks();},5000);
+    // this.networkCheck = setInterval(()=>{this.enablocation();this.listNetworks();},5000);
+    this.enablocation();
+    this.listNetworks();
   }
 
-  devices = [];
+  devices:any = [];
   async listNetworks() {
     try {
-      let results = await this.wifiwizard2.scan();
+      // let results = await this.wifiwizard2.scan();
+      var results = await this.listThingsInThingGroup();
       this.devices = results;
       // this.devices.forEach(device => {
       //   console.log(device.SSID, this.prevWifi);
@@ -322,8 +392,22 @@ export class WelcomePage implements OnInit {
       // })
     } catch (error) {
         // this.errorHandler(error);
-        console.log('Wi-Fi scan devices error: ', error);
+        console.log('IoT Garden devices error: ', error);
     }
+  }
+
+  async listThingsInThingGroup () {
+    const me = this;
+    var prm = new Promise(function (resolve, reject) {
+      me.http.get(me.iotApi + 'listgardendevices').subscribe(function(data:any) {
+          console.log('AWS IoT List Things Response: ', data);
+          if(data.things) resolve(data.things);
+          else reject([]);
+      }, function (error) {
+          reject(error);
+      });
+    });
+    return prm;
   }
 
   redirect() {
@@ -345,7 +429,7 @@ export class WelcomePage implements OnInit {
 onRequestSuccess(success){
     console.log("Successfully requested accuracy: "+success.message);
     this.listNetworks();
-    this.checkNetworks();
+    // this.checkNetworks();
 }
 
  onRequestFailure = (error)=>{
