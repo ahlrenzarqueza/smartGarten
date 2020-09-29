@@ -10,7 +10,6 @@
 #include "GravityTDS.h"
 
 #include <WiFi.h>
-#include <WebServer.h>
 #include <WiFiClient.h>
 #include <ESPmDNS.h>
 
@@ -24,7 +23,7 @@
 
 // The MQTT topics that this device should publish/subscribe
 #define AWS_IOT_PUBLISH_TOPIC   "$aws/things/Test-Arduino-Garden/shadow/name/Measurements/update"
-#define AWS_IOT_SUBSCRIBE_TOPIC "$aws/things/Test-Arduino-Garden/shadow/name/Measurements/update/accepted"
+#define AWS_IOT_SUBSCRIBE_TOPIC "$aws/things/Test-Arduino-Garden/shadow/name/Settings/update/accepted"
 
 WiFiClientSecure net = WiFiClientSecure();
 MQTTClient client = MQTTClient(256);
@@ -34,8 +33,6 @@ unsigned long int AWSpublish_Timer = 0;
 int AWSPublish_Interval = 3000;
 
 #define DHTTYPE DHT11   // DHT 11
-
-WebServer server(80);
 
 // DHT Sensor
 uint8_t DHTPin = 4;   //  DHT11 PIN TEMPRATURE and Humidity
@@ -258,12 +255,106 @@ void bt_messageHandler() {
    }
 }
 
-void messageHandler(String &topic, String &payload) {
-  Serial.println("incoming: " + topic + " - " + payload);
+void handleSettingsUpdate(String &topic, String &payload) {
+  Serial.println("AWS IoT Incoming Settings: " + topic + " - " + payload);
 
-  //  StaticJsonDocument<200> doc;
-  //  deserializeJson(doc, payload);
-  //  const char* message = doc["message"];
+   StaticJsonDocument<200> doc;
+   deserializeJson(doc, payload);
+
+   const bool fan1Doc = doc["state"]["desired"]["fan1-enabled"];
+   const bool fan2Doc = doc["state"]["desired"]["fan2-enabled"];
+   const bool pumpDoc = doc["state"]["desired"]["pump-enabled"];
+   const bool light1Doc = doc["state"]["desired"]["light1-enabled"];
+   const bool light2Doc = doc["state"]["desired"]["light2-enabled"];
+   const bool light3Doc = doc["state"]["desired"]["light3-enabled"];
+
+   // const char* sun_rise_hourDocTest = doc["sun_rise_hour"];
+   // Serial.println(sun_rise_hourDocTest);
+   const int sun_rise_hourDoc = doc["state"]["desired"]["sunrise-hr"];
+   const int sun_rise_minDoc = doc["state"]["desired"]["sunrise-min"];
+   const int sun_set_hourDoc = doc["state"]["desired"]["sunset-hr"];
+   const int sun_set_minDoc = doc["state"]["desired"]["sunset-min"];
+
+   const char* fanLevel = doc["fanLevel"];
+   const char* pumpLevel = doc["pumpLevel"];
+
+//    Serial.print(fan1Doc);
+//    Serial.print(" ");
+//    Serial.print(fan2Doc);
+//    Serial.print(" ");
+//    Serial.print(pumpDoc);
+//    Serial.print(" ");
+//    Serial.print(light1Doc);
+//    Serial.print(" ");
+//    Serial.print(light2Doc);
+//    Serial.print(" ");
+//    Serial.print(light3Doc);
+//    Serial.print(" ");
+//    Serial.print(sun_rise_hourDoc);
+//    Serial.print(" ");
+//    Serial.print(sun_rise_minDoc);
+//    Serial.print(" ");
+//    Serial.print(sun_set_hourDoc);
+//    Serial.print(" ");
+//    Serial.print(sun_set_minDoc);
+//    Serial.print(" ");
+//    Serial.print(fanLevel);
+//    Serial.print(" ");
+//    Serial.print(pumpLevel);
+//    Serial.print(" ");
+//    Serial.println();
+   fan1 = fan1Doc;
+   fan2 = fan2Doc;
+   if (fanLevel != NULL && strcmp(fanLevel, "low") == 0) {
+     fanTime = 10;                                         //  Change TIME HERE       //
+   } else if (fanLevel != NULL && strcmp(fanLevel, "medium") == 0) {
+     fanTime = 30;                                        //  Change TIME HERE       //     FAN CONTROL
+   } else if (fanLevel != NULL && strcmp(fanLevel, "high") == 0) {
+     fanTime = 60;                                       //  Change TIME HERE        //
+   }
+
+   pump = pumpDoc;
+   if (pumpLevel != NULL && strcmp(pumpLevel, "low") == 0) {
+     pumpTime = 10;
+   } else if (pumpLevel != NULL && strcmp(pumpLevel, "medium") == 0) {
+     pumpTime = 30;
+   } else if (pumpLevel != NULL && strcmp(pumpLevel, "high") == 0) {
+     pumpTime = 60;
+   }
+
+   light1 = light1Doc;
+   light2 = light2Doc;
+   light3 = light3Doc;
+
+   sunRiseHour = sun_rise_hourDoc;
+   sunRiseMin = sun_rise_minDoc;
+   sunSetHour = sun_set_hourDoc;
+   sunSetMin = sun_set_minDoc;
+//
+//    Serial.print(fan1);
+//    Serial.print(" ");
+//    Serial.print(fan2);
+//    Serial.print(" ");
+//    Serial.print(fanTime);
+//    Serial.print(" ");
+//    Serial.print(pump);
+//    Serial.print(" ");
+//    Serial.print(pumpTime);
+//    Serial.print(" ");
+//    Serial.print(light1);
+//    Serial.print(" ");
+//    Serial.print(light2);
+//    Serial.print(" ");
+//    Serial.print(light3);
+//    Serial.print(" ");
+//    Serial.print(sunRiseHour);
+//    Serial.print(" ");
+//    Serial.print(sunRiseMin);
+//    Serial.print(" ");
+//    Serial.print(sunSetHour);
+//    Serial.print(" ");
+//    Serial.print(sunSetMin);
+//    Serial.println();
 }
 
 void connectToWiFi()
@@ -301,7 +392,7 @@ void connectAWS()
   client.begin(AWS_IOT_ENDPOINT, 8883, net);
 
   // Create a message handler
-  client.onMessage(messageHandler);
+  client.onMessage(handleSettingsUpdate);
 
   Serial.print("Connecting to AWS IOT...");
 
@@ -352,6 +443,13 @@ void publishMessage()
   char jsonBuffer[512];
   serializeJson(jsonDoc, jsonBuffer); // print to client
 
+// SET DIMMER for publish indication
+  for (int i = 0; i < 100; i++) {
+    dimmer.setPower(i); // name.setPower(0%-100%)
+  }
+  for (int i = 100; i > 0; i--) {
+    dimmer.setPower(i); // name.setPower(0%-100%)
+  }
   client.publish(AWS_IOT_PUBLISH_TOPIC, jsonBuffer);
 }
 
@@ -407,123 +505,12 @@ void setup() {
 
   dimmer.begin(NORMAL_MODE, ON); //dimmer initialisation: name.begin(MODE, STATE)
 
-
-//  server.on("/getData", handle_OnConnect);
-//  server.on("/setData", HTTP_POST, []() {
-//    StaticJsonDocument<1000> doc;
-//    DeserializationError err = deserializeJson(doc, server.arg("plain"));
-//    if (err) {
-//      Serial.print(F("deserializeJson() failed with code "));
-//      Serial.println(err.c_str());
-//    }
-//    Serial.println("plain: " + server.arg("plain"));
-//    const bool fan1Doc = doc["fan1"];
-//    const bool fan2Doc = doc["fan2"];
-//    const bool pumpDoc = doc["pump"];
-//    const bool light1Doc = doc["light1"];
-//    const bool light2Doc = doc["light2"];
-//    const bool light3Doc = doc["light3"];
-//
-//    const char* sun_rise_hourDocTest = doc["sun_rise_hour"];
-//    Serial.println(sun_rise_hourDocTest);
-//    const int sun_rise_hourDoc = doc["sun_rise_hour"];
-//    const int sun_rise_minDoc = doc["sun_rise_min"];
-//    const int sun_set_hourDoc = doc["sun_set_hour"];
-//    const int sun_set_minDoc = doc["sun_set_min"];
-//
-//    const char* fanLevel = doc["fan_level"];
-//    const char* pumpLevel = doc["pump_level"];
-//
-//    Serial.print(fan1Doc);
-//    Serial.print(" ");
-//    Serial.print(fan2Doc);
-//    Serial.print(" ");
-//    Serial.print(pumpDoc);
-//    Serial.print(" ");
-//    Serial.print(light1Doc);
-//    Serial.print(" ");
-//    Serial.print(light2Doc);
-//    Serial.print(" ");
-//    Serial.print(light3Doc);
-//    Serial.print(" ");
-//    Serial.print(sun_rise_hourDoc);
-//    Serial.print(" ");
-//    Serial.print(sun_rise_minDoc);
-//    Serial.print(" ");
-//    Serial.print(sun_set_hourDoc);
-//    Serial.print(" ");
-//    Serial.print(sun_set_minDoc);
-//    Serial.print(" ");
-//    Serial.print(fanLevel);
-//    Serial.print(" ");
-//    Serial.print(pumpLevel);
-//    Serial.print(" ");
-//    Serial.println();
-//    fan1 = fan1Doc;
-//    fan2 = fan2Doc;
-//    if (fanLevel != NULL && strcmp(fanLevel, "low") == 0) {
-//      fanTime = 10;                                         //  Change TIME HERE       //
-//    } else if (fanLevel != NULL && strcmp(fanLevel, "medium") == 0) {
-//      fanTime = 30;                                        //  Change TIME HERE       //     FAN CONTROL
-//    } else if (fanLevel != NULL && strcmp(fanLevel, "high") == 0) {
-//      fanTime = 60;                                       //  Change TIME HERE        //
-//    }
-//
-//    pump = pumpDoc;
-//    if (pumpLevel != NULL && strcmp(pumpLevel, "low") == 0) {
-//      pumpTime = 10;
-//    } else if (pumpLevel != NULL && strcmp(pumpLevel, "medium") == 0) {
-//      pumpTime = 30;
-//    } else if (pumpLevel != NULL && strcmp(pumpLevel, "high") == 0) {
-//      pumpTime = 60;
-//    }
-//
-//    light1 = light1Doc;
-//    light2 = light2Doc;
-//    light3 = light3Doc;
-//
-//    sunRiseHour = sun_rise_hourDoc;
-//    sunRiseMin = sun_rise_minDoc;
-//    sunSetHour = sun_set_hourDoc;
-//    sunSetMin = sun_set_minDoc;
-//
-//    Serial.print(fan1);
-//    Serial.print(" ");
-//    Serial.print(fan2);
-//    Serial.print(" ");
-//    Serial.print(fanTime);
-//    Serial.print(" ");
-//    Serial.print(pump);
-//    Serial.print(" ");
-//    Serial.print(pumpTime);
-//    Serial.print(" ");
-//    Serial.print(light1);
-//    Serial.print(" ");
-//    Serial.print(light2);
-//    Serial.print(" ");
-//    Serial.print(light3);
-//    Serial.print(" ");
-//    Serial.print(sunRiseHour);
-//    Serial.print(" ");
-//    Serial.print(sunRiseMin);
-//    Serial.print(" ");
-//    Serial.print(sunSetHour);
-//    Serial.print(" ");
-//    Serial.print(sunSetMin);
-//    Serial.println();
-//    server.send ( 200, "application/json", "{\"status\":\"success\"}" );
-//  });
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
   connectToWiFi();
   connectAWS();
   AWSpublish_Timer = millis();
-
-  ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 }
 void loop() {
 
-  server.handleClient();
   getTime();
   executeFanTimer();
   executePump();
@@ -540,41 +527,41 @@ void loop() {
   }
 }
 
-void handle_OnConnect() {
+//void handle_OnConnect() {
+//
+//  Temperature = dht.readTemperature(); // Gets the values of the temperature
+//  Humidity = dht.readHumidity(); // Gets the values of the humidity
+//  SensorValueCM = getDistance();
+//  Waterlevel = (1 - (SensorValueCM - SensorSafetyDistance) / (SensorHeight - SensorSafetyDistance)) * 100;
+//  PHValue = getPhValue();
+//
+//  ds18b20.requestTemperatures();
+//  while (!ds18b20.isConversionComplete());  // wait until sensor is ready
+//  Temperature_DS18B20 = ds18b20.getTempC();
+//
+//  gravityTds.setTemperature(Temperature_DS18B20);  // set the temperature and execute temperature compensation
+//  gravityTds.update();  //sample and calculate
+//  tdsValue = gravityTds.getTdsValue();  // then get the value
+//
+//
+//  server.sendHeader("Access-Control-Allow-Origin", "*");
+//  server.sendHeader("Allow", "HEAD,GET,PUT,POST,DELETE,OPTIONS");
+//  server.sendHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT");
+//  server.sendHeader("Access-Control-Allow-Headers", "X-Requested-With, X-HTTP-Method-Override, Content-Type, Cache-Control, Accept");
+//
+//  server.send(200, "application/json", SendHTML(Temperature, Humidity, Waterlevel, PHValue, Temperature_DS18B20, tdsValue));
+//  for (int i = 0; i < 100; i++) {
+//    dimmer.setPower(i); // name.setPower(0%-100%)
+//  }
+//  for (int i = 100; i > 0; i--) {
+//    dimmer.setPower(i); // name.setPower(0%-100%)
+//  }
+//
+//}
 
-  Temperature = dht.readTemperature(); // Gets the values of the temperature
-  Humidity = dht.readHumidity(); // Gets the values of the humidity
-  SensorValueCM = getDistance();
-  Waterlevel = (1 - (SensorValueCM - SensorSafetyDistance) / (SensorHeight - SensorSafetyDistance)) * 100;
-  PHValue = getPhValue();
-
-  ds18b20.requestTemperatures();
-  while (!ds18b20.isConversionComplete());  // wait until sensor is ready
-  Temperature_DS18B20 = ds18b20.getTempC();
-
-  gravityTds.setTemperature(Temperature_DS18B20);  // set the temperature and execute temperature compensation
-  gravityTds.update();  //sample and calculate
-  tdsValue = gravityTds.getTdsValue();  // then get the value
-
-
-  server.sendHeader("Access-Control-Allow-Origin", "*");
-  server.sendHeader("Allow", "HEAD,GET,PUT,POST,DELETE,OPTIONS");
-  server.sendHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT");
-  server.sendHeader("Access-Control-Allow-Headers", "X-Requested-With, X-HTTP-Method-Override, Content-Type, Cache-Control, Accept");
-
-  server.send(200, "application/json", SendHTML(Temperature, Humidity, Waterlevel, PHValue, Temperature_DS18B20, tdsValue));
-  for (int i = 0; i < 100; i++) {
-    dimmer.setPower(i); // name.setPower(0%-100%)
-  }
-  for (int i = 100; i > 0; i--) {
-    dimmer.setPower(i); // name.setPower(0%-100%)
-  }
-
-}
-
-void handle_NotFound() {
-  server.send(404, "text/plain", "Not found");
-}
+//void handle_NotFound() {
+//  server.send(404, "text/plain", "Not found");
+//}
 
 String SendHTML(float Temperaturestat, float Humiditystat, float Waterlevel, float PHValue, float Temp_DS18B20, float Temp_tdsValue) {  /// ALL the sensor data is send from here
   String ptr = "{\"temparature\":";

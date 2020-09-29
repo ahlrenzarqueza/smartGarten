@@ -10,6 +10,7 @@
           <ion-col size ='2' align='left' col-xl-2 col-lg-3 col-md-4 class="tab2-img-col">
               <!-- change the src of the <ion-img> to change image -->
               <ion-img class='tab2-body-img' src="assets/icon/sun.png"></ion-img>
+              <ion-toggle mode='md'  [(ngModel)] = 'timeToggle' (ngModelChange) = 'sunTimer()'  color="custgreen" class="tab2-toggle toggle-calm" ></ion-toggle>
           </ion-col>
     
           <ion-col size ='8'>
@@ -41,7 +42,7 @@
           </ion-col>
 
           <ion-col size ='2' col-xl-2 col-lg-3 col-md-4>
-                <ion-toggle mode='md'  [(ngModel)] = 'timeToggle' (ngModelChange) = 'sunTimer()'  color="custgreen" class="tab2-toggle toggle-calm" ></ion-toggle>
+              
           </ion-col>  
         </ion-row>
 
@@ -49,6 +50,7 @@
             <ion-col size ='2' align='left' class="tab2-img-col">
               <!-- change the src of the <ion-img> to change image -->
               <ion-img class='tab2-body-img' src="assets/icon/wind.png"></ion-img>
+              <ion-toggle mode='md'  color="custgreen" [(ngModel)] = "fanToggle" (ionChange)="fanToggleFunc()" class="tab2-toggle" ></ion-toggle>
             </ion-col>
       
             <ion-col size ='8'>
@@ -79,7 +81,7 @@
 
               </ion-col>
             <ion-col size ='2'>
-                <ion-toggle mode='md'  color="custgreen" [(ngModel)] = "fanToggle" (ionChange)="fanToggleFunc()" class="tab2-toggle" ></ion-toggle>
+                
             </ion-col>
             
           </ion-row>
@@ -88,6 +90,7 @@
               <ion-col size ='2' align='left' class="tab2-img-col">
                 <!-- change the src of the <ion-img> to change image -->
                 <ion-img class='tab2-body-img' src="assets/icon/vintage-water-pump.png"></ion-img>
+                <ion-toggle mode='md'  color="custgreen" [(ngModel)] = "pumpToggle" (ionChange)="pumpToggleFunc()" style="padding-top:66%;" class="tab2-toggle" ></ion-toggle>
               </ion-col>
         
               <ion-col size ='8'>
@@ -108,7 +111,7 @@
   
               <ion-col size ='2'>
                 <div>
-                    <ion-toggle mode='md'  color="custgreen" [(ngModel)] = "pumpToggle" (ionChange)="pumpToggleFunc()" style="padding-top:66%;" class="tab2-toggle" ></ion-toggle>                       
+                                           
                 </div> 
               </ion-col>
 
