@@ -19,6 +19,15 @@
     padding: 0vw 3vw 0vw 3vw;
 }
 
+.grid-nav {
+    padding: 20px 0;
+}
+
+.datetimepicker {
+    border: 1px solid #649b62;
+    border-radius: 2px;
+    padding: 1mm;
+}
 
 // CODE FOR THE SWITCH-ON  BUTTONS AND TOGGLES COLORS
 .ion-color-custgreen {
@@ -42,4 +51,8 @@
     --ion-color-contrast-rgb: 0,0,0;
     --ion-color-shade: grey;
     --ion-color-tint: grey;
+}
+
+.snooze-label {
+    display: block;
 }

@@ -22,6 +22,22 @@ declare var ble: any;
   styleUrls: ['./welcome.page.scss'],
 })
 export class WelcomePage implements OnInit {
+  awsiotEndpoint:any;
+  awsiot:any;
+  awsiotdata:any;
+  iotApi:any = 'https://1ki06byvn9.execute-api.ap-southeast-1.amazonaws.com/live/';
+  prevWifi:any;
+  subscription: any;
+  selected_wifi = null;
+  selected_bt = null;
+  selected_bt_id = null;
+  selected_bt_name = null;
+  networkCheck:any;
+  osCheck:any;
+  loaderToShow:any;
+  btdevice:any;
+  connectionMode:'wifi'|'bluetooth';
+  gardenNameSettings:any;
 
   constructor(private router: Router,
     private diagnostic : Diagnostic,
@@ -40,7 +56,6 @@ export class WelcomePage implements OnInit {
     // this.showLoader()
     // this.storage.set('name','chintan');
     // this.storage.get('test').then((val)=>{alert(val)});
-  //  this.storage.get('prevWifi').then((val)=>{this.prevWifi = val});
     this.osCheck = !this.platform.is('ios');
     this.connectionMode = 'wifi';
    }
@@ -48,21 +63,6 @@ export class WelcomePage implements OnInit {
   ngOnInit() {
 
   }
-  awsiotEndpoint:any;
-  awsiot:any;
-  awsiotdata:any;
-  iotApi:any = 'https://1ki06byvn9.execute-api.ap-southeast-1.amazonaws.com/live/';
-  prevWifi:any;
-  subscription: any;
-  selected_wifi = null;
-  selected_bt = null;
-  selected_bt_id = null;
-  selected_bt_name = null;
-  networkCheck:any;
-  osCheck:any;
-  loaderToShow:any;
-  btdevice:any;
-  connectionMode:'wifi'|'bluetooth';
 
 
   async showLoader() {
@@ -124,11 +124,15 @@ export class WelcomePage implements OnInit {
     });
     AWS.config.update(creds);
     this.awsiot = new AWS.Iot({apiVersion: '2015-05-28'});
+    this.storage.get('gardenNameSettings').then((val)=>{
+      if(val) me.gardenNameSettings = val;
+      else me.storage.set('gardenNameSettings', {});
+    });
     await this.showLoader();
     this.awsiot.describeEndpoint({endpointType: 'iot:Data-ATS'}, function(err, data) {
       if (err) {
         me.hideLoader();
-        me.presentAlert('Please connect to a working internet connection.');
+        me.presentAlert(err, 'Please connect to a working internet connection.');
         me.openNativeSettings.open('wifi')
         .then( val => {
           console.log("Successfully opened native settings.");
@@ -235,7 +239,6 @@ export class WelcomePage implements OnInit {
   connect()
   {
     // this.router.navigateByUrl('/tabs');
-    debugger
     if((this.connectionMode == 'wifi' && this.selected_wifi != null) ||
       (this.connectionMode == 'bluetooth' && this.selected_bt != null)) {
         this.presentAlertPrompt()
@@ -346,7 +349,6 @@ export class WelcomePage implements OnInit {
 
   connectionSuccess = async function ()
   {
-    debugger
     console.log('Connected to a Garden Device');
     this.hideLoader();
     await this.storage.set('globalConnectionMode', this.connectionMode);
@@ -379,24 +381,23 @@ export class WelcomePage implements OnInit {
 
   devices:any = [];
   async listNetworks() {
+    const me = this;
     try {
       // let results = await this.wifiwizard2.scan();
-      var results = await this.listThingsInThingGroup();
-      this.devices = results;
-      // this.devices.forEach(device => {
-      //   console.log(device.SSID, this.prevWifi);
-      //   if(device.SSID ===this.prevWifi){
-      //     this.selected_wifi= this.prevWifi;
-      //     this.connect();
-      //   }
-      // })
+      const results:any = await this.listThingsInThingGroup();
+      this.devices = results.map(function (result) {
+        return {
+          name:  me.gardenNameSettings[result],
+          id: result
+        }
+      });
     } catch (error) {
         // this.errorHandler(error);
         console.log('IoT Garden devices error: ', error);
     }
   }
 
-  async listThingsInThingGroup () {
+  async listThingsInThingGroup() {
     const me = this;
     var prm = new Promise(function (resolve, reject) {
       me.http.get(me.iotApi + 'listgardendevices').subscribe(function(data:any) {

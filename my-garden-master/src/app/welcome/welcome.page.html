@@ -51,7 +51,7 @@
         <ion-item *ngIf = "connectionMode == 'wifi'">
           <ion-label class="device-select-header">Choose an IoT Garden Device</ion-label>
           <ion-select placeholder="Choose an IoT Garden Device" [(ngModel)] = 'selected_wifi' style="width: 100%; max-width: unset;">
-            <ion-select-option [value] = 'device' *ngFor='let device of devices'>{{device}}</ion-select-option>
+            <ion-select-option [value] = 'device.id' *ngFor='let device of devices'>{{device.name || device.id}}</ion-select-option>
           </ion-select>
         </ion-item>    
         <ion-item *ngIf = "connectionMode == 'bluetooth'">

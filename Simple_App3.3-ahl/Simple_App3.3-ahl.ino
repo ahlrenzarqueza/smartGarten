@@ -1,3 +1,5 @@
+// ID of Garden Device Name in AWS IoT
+#define AWS_IOT_ID "Test-Arduino-Garden"
 
 #include <ArduinoJson.h>
 
@@ -22,13 +24,15 @@
 #include <MQTTClient.h>
 
 // The MQTT topics that this device should publish/subscribe
-#define AWS_IOT_PUBLISH_TOPIC   "$aws/things/Test-Arduino-Garden/shadow/name/Measurements/update"
-#define AWS_IOT_SUBSCRIBE_TOPIC "$aws/things/Test-Arduino-Garden/shadow/name/Settings/update/accepted"
+String AWS_IOT_PUBLISH_TOPIC = "$aws/things/" + String(AWS_IOT_ID) + "/shadow/name/Measurements/update";
+String AWS_IOT_PUBSETTING_TOPIC = "$aws/things/" + String(AWS_IOT_ID) + "/shadow/name/Settings/update";
+String AWS_IOT_SUBSCRIBE_TOPIC = "$aws/things/" + String(AWS_IOT_ID) + "/shadow/name/Settings/update/accepted";
 
 WiFiClientSecure net = WiFiClientSecure();
 MQTTClient client = MQTTClient(256);
 
 unsigned long int AWSpublish_Timer = 0;
+unsigned long int SnoozeMinute_Timer = 0;
 
 int AWSPublish_Interval = 3000;
 
@@ -100,6 +104,8 @@ String wtstr;
 float Temperature_DS18B20;
 float tdsValue;
 
+// Date Time RTC
+String datetimertc = "0000000000000";
 
 DS3231 Clock;
 bool Century = false;
@@ -115,6 +121,10 @@ int fanTime = 0;
 bool pump = false;
 int pumpTime = 0;
 
+int lightSnoozeTime = 0;
+int fanSnoozeTime = 0;
+int pumpSnoozeTime = 0;
+
 bool light1 = false;
 bool light2 = false;
 bool light3 = false;
@@ -122,6 +132,18 @@ int sunRiseHour = 0;
 int sunRiseMin = 0;
 int sunSetHour = 0;
 int sunSetMin = 0;
+
+int fansunRiseHour = 0;
+int fansunRiseMin = 0;
+int fansunSetHour = 0;
+int fansunSetMin = 0;
+
+int pumpsunRiseHour = 0;
+int pumpsunRiseMin = 0;
+int pumpsunSetHour = 0;
+int pumpsunSetMin = 0;
+
+int lightIntensity = 0;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef ESP32
 #include <esp_wifi.h>
@@ -256,105 +278,143 @@ void bt_messageHandler() {
 }
 
 void handleSettingsUpdate(String &topic, String &payload) {
-  Serial.println("AWS IoT Incoming Settings: " + topic + " - " + payload);
+  if(topic == String(AWS_IOT_ID) + String("_ClockUpdate")) {
+    Serial.println("AWS IoT Incoming Settings: " + topic + " - " + payload);
 
-   StaticJsonDocument<200> doc;
-   deserializeJson(doc, payload);
+    StaticJsonDocument<200> doc;
+    deserializeJson(doc, payload);
+    
+    const int year = doc["year"];
+    const int month = doc["month"];
+    const int date = doc["date"];
+    const int dow = doc["dow"];
+    const int hour = doc["hour"];
+    const int minute = doc["minute"];
+    const int second = doc["second"];
 
-   const bool fan1Doc = doc["state"]["desired"]["fan1-enabled"];
-   const bool fan2Doc = doc["state"]["desired"]["fan2-enabled"];
-   const bool pumpDoc = doc["state"]["desired"]["pump-enabled"];
-   const bool light1Doc = doc["state"]["desired"]["light1-enabled"];
-   const bool light2Doc = doc["state"]["desired"]["light2-enabled"];
-   const bool light3Doc = doc["state"]["desired"]["light3-enabled"];
+    Clock.setYear(year);
+    Clock.setMonth(month);
+    Clock.setDate(date);
+    Clock.setDoW(dow);
+    Clock.setHour(hour);
+    Clock.setMinute(minute);
+    Clock.setSecond(second);
+  }
+  else {
+    Serial.println("AWS IoT Incoming Settings: " + topic + " - " + payload);
 
-   // const char* sun_rise_hourDocTest = doc["sun_rise_hour"];
-   // Serial.println(sun_rise_hourDocTest);
-   const int sun_rise_hourDoc = doc["state"]["desired"]["sunrise-hr"];
-   const int sun_rise_minDoc = doc["state"]["desired"]["sunrise-min"];
-   const int sun_set_hourDoc = doc["state"]["desired"]["sunset-hr"];
-   const int sun_set_minDoc = doc["state"]["desired"]["sunset-min"];
+    StaticJsonDocument<200> doc;
+    deserializeJson(doc, payload);
+    
+    const bool fan1Doc = doc["state"]["desired"]["fan1-enabled"];
+    const bool fan2Doc = doc["state"]["desired"]["fan2-enabled"];
+    const bool pumpDoc = doc["state"]["desired"]["pump-enabled"];
+    const bool light1Doc = doc["state"]["desired"]["light1-enabled"];
+    const bool light2Doc = doc["state"]["desired"]["light2-enabled"];
+    const bool light3Doc = doc["state"]["desired"]["light3-enabled"];
+    
+    // const char* sun_rise_hourDocTest = doc["sun_rise_hour"];
+    // Serial.println(sun_rise_hourDocTest);
+    const int sun_rise_hourDoc = doc["state"]["desired"]["sunrise-hr"];
+    const int sun_rise_minDoc = doc["state"]["desired"]["sunrise-min"];
+    const int sun_set_hourDoc = doc["state"]["desired"]["sunset-hr"];
+    const int sun_set_minDoc = doc["state"]["desired"]["sunset-min"];
 
-   const char* fanLevel = doc["fanLevel"];
-   const char* pumpLevel = doc["pumpLevel"];
+    const int fansun_rise_hourDoc = doc["state"]["desired"]["fansunrise-hr"];
+    const int fansun_rise_minDoc = doc["state"]["desired"]["fansunrise-min"];
+    const int fansun_set_hourDoc = doc["state"]["desired"]["fansunset-hr"];
+    const int fansun_set_minDoc = doc["state"]["desired"]["fansunset-min"];
 
-//    Serial.print(fan1Doc);
-//    Serial.print(" ");
-//    Serial.print(fan2Doc);
-//    Serial.print(" ");
-//    Serial.print(pumpDoc);
-//    Serial.print(" ");
-//    Serial.print(light1Doc);
-//    Serial.print(" ");
-//    Serial.print(light2Doc);
-//    Serial.print(" ");
-//    Serial.print(light3Doc);
-//    Serial.print(" ");
-//    Serial.print(sun_rise_hourDoc);
-//    Serial.print(" ");
-//    Serial.print(sun_rise_minDoc);
-//    Serial.print(" ");
-//    Serial.print(sun_set_hourDoc);
-//    Serial.print(" ");
-//    Serial.print(sun_set_minDoc);
-//    Serial.print(" ");
-//    Serial.print(fanLevel);
-//    Serial.print(" ");
-//    Serial.print(pumpLevel);
-//    Serial.print(" ");
-//    Serial.println();
-   fan1 = fan1Doc;
-   fan2 = fan2Doc;
-   if (fanLevel != NULL && strcmp(fanLevel, "low") == 0) {
-     fanTime = 10;                                         //  Change TIME HERE       //
-   } else if (fanLevel != NULL && strcmp(fanLevel, "medium") == 0) {
-     fanTime = 30;                                        //  Change TIME HERE       //     FAN CONTROL
-   } else if (fanLevel != NULL && strcmp(fanLevel, "high") == 0) {
-     fanTime = 60;                                       //  Change TIME HERE        //
-   }
+    const int pumpsun_rise_hourDoc = doc["state"]["desired"]["pumpsunrise-hr"];
+    const int pumpsun_rise_minDoc = doc["state"]["desired"]["pumpsunrise-min"];
+    const int pumpsun_set_hourDoc = doc["state"]["desired"]["pumpsunset-hr"];
+    const int pumpsun_set_minDoc = doc["state"]["desired"]["pumpsunset-min"];
+    
+//    const char* fanLevel = doc["fanLevel"];
+//    const char* pumpLevel = doc["pumpLevel"];
+    const int fanOnTimer = doc["state"]["desired"]["fanOnTimer"];
+    const int pumpOnTimer = doc["state"]["desired"]["pumpOnTimer"];
 
-   pump = pumpDoc;
-   if (pumpLevel != NULL && strcmp(pumpLevel, "low") == 0) {
-     pumpTime = 10;
-   } else if (pumpLevel != NULL && strcmp(pumpLevel, "medium") == 0) {
-     pumpTime = 30;
-   } else if (pumpLevel != NULL && strcmp(pumpLevel, "high") == 0) {
-     pumpTime = 60;
-   }
+    const int lightSnoozeRemaining = doc["state"]["desired"]["lightSnoozeRemaining"];
+    const int fanSnoozeRemaining = doc["state"]["desired"]["fanSnoozeRemaining"];
+    const int pumpSnoozeRemaining = doc["state"]["desired"]["pumpSnoozeRemaining"];
 
-   light1 = light1Doc;
-   light2 = light2Doc;
-   light3 = light3Doc;
+    const int dimmerPower = doc["state"]["desired"]["lightIntensity"];
+    
+    // Fan and Pump Level - to deprecate
+//    if (fanLevel != NULL && strcmp(fanLevel, "low") == 0) {
+//     fanTime = 10;                                         //  Change TIME HERE       //
+//    } else if (fanLevel != NULL && strcmp(fanLevel, "medium") == 0) {
+//     fanTime = 30;                                        //  Change TIME HERE       //     FAN CONTROL
+//    } else if (fanLevel != NULL && strcmp(fanLevel, "high") == 0) {
+//     fanTime = 60;                                       //  Change TIME HERE        //
+//    }
+//    
+//    if (pumpLevel != NULL && strcmp(pumpLevel, "low") == 0) {
+//     pumpTime = 10;
+//    } else if (pumpLevel != NULL && strcmp(pumpLevel, "medium") == 0) {
+//     pumpTime = 30;
+//    } else if (pumpLevel != NULL && strcmp(pumpLevel, "high") == 0) {
+//     pumpTime = 60;
+//    }
 
-   sunRiseHour = sun_rise_hourDoc;
-   sunRiseMin = sun_rise_minDoc;
-   sunSetHour = sun_set_hourDoc;
-   sunSetMin = sun_set_minDoc;
-//
-//    Serial.print(fan1);
-//    Serial.print(" ");
-//    Serial.print(fan2);
-//    Serial.print(" ");
-//    Serial.print(fanTime);
-//    Serial.print(" ");
-//    Serial.print(pump);
-//    Serial.print(" ");
-//    Serial.print(pumpTime);
-//    Serial.print(" ");
-//    Serial.print(light1);
-//    Serial.print(" ");
-//    Serial.print(light2);
-//    Serial.print(" ");
-//    Serial.print(light3);
-//    Serial.print(" ");
-//    Serial.print(sunRiseHour);
-//    Serial.print(" ");
-//    Serial.print(sunRiseMin);
-//    Serial.print(" ");
-//    Serial.print(sunSetHour);
-//    Serial.print(" ");
-//    Serial.print(sunSetMin);
-//    Serial.println();
+    fanTime = fanOnTimer;
+    pumpTime = pumpOnTimer;
+    lightSnoozeTime = lightSnoozeRemaining;
+    fanSnoozeTime = fanSnoozeRemaining;
+    pumpSnoozeTime = pumpSnoozeRemaining;
+
+    if(lightSnoozeTime > 0) {
+      light1 = false;
+      light2 = false;
+      light3 = false;
+    }
+    else {
+      light1 = light1Doc;
+      light2 = light2Doc;
+      light3 = light3Doc;
+      lightIntensity = dimmerPower;
+      dimmer.setPower(dimmerPower);
+    }
+    if(fanSnoozeTime > 0) {
+      fan1 = false;
+      fan2 = false;
+    }
+    else {
+      fan1 = fan1Doc;
+      fan2 = fan2Doc;
+    }
+    if(pumpSnoozeTime > 0) {
+      pump = false;
+    }
+    else {
+      pump = pumpDoc;
+    }
+    
+//    pump = pumpDoc;
+//    fan1 = fan1Doc;
+//    fan2 = fan2Doc;
+//    
+//    light1 = light1Doc;
+//    light2 = light2Doc;
+//    light3 = light3Doc;
+    
+    sunRiseHour = sun_rise_hourDoc;
+    sunRiseMin = sun_rise_minDoc;
+    sunSetHour = sun_set_hourDoc;
+    sunSetMin = sun_set_minDoc;
+    
+    fansunRiseHour = fansun_rise_hourDoc;
+    fansunRiseMin = fansun_rise_minDoc;
+    fansunSetHour = fansun_set_hourDoc;
+    fansunSetMin = fansun_set_minDoc;
+    
+    pumpsunRiseHour = pumpsun_rise_hourDoc;
+    pumpsunRiseMin = pumpsun_rise_minDoc;
+    pumpsunSetHour = pumpsun_set_hourDoc;
+    pumpsunSetMin = pumpsun_set_minDoc;
+    publishSettings();
+  }
 }
 
 void connectToWiFi()
@@ -408,6 +468,7 @@ void connectAWS()
 
   // Subscribe to a topic
   client.subscribe(AWS_IOT_SUBSCRIBE_TOPIC);
+  client.subscribe(String(AWS_IOT_ID) + String("_ClockUpdate"));
 
   Serial.println("AWS IoT Connected!");
 }
@@ -443,16 +504,45 @@ void publishMessage()
   char jsonBuffer[512];
   serializeJson(jsonDoc, jsonBuffer); // print to client
 
-// SET DIMMER for publish indication
-  for (int i = 0; i < 100; i++) {
-    dimmer.setPower(i); // name.setPower(0%-100%)
-  }
-  for (int i = 100; i > 0; i--) {
-    dimmer.setPower(i); // name.setPower(0%-100%)
-  }
   client.publish(AWS_IOT_PUBLISH_TOPIC, jsonBuffer);
 }
 
+void publishSettings()
+{
+  StaticJsonDocument<512> jsonDoc;
+  JsonObject stateObj = jsonDoc.createNestedObject("state");
+  JsonObject reportedObj = stateObj.createNestedObject("reported");
+
+  reportedObj["humidity"] = Humidity,
+  reportedObj["waterTemperature"] = Temperature_DS18B20;
+  reportedObj["airTemperature"] = Temperature;
+  reportedObj["phValue"] = PHValue;
+  reportedObj["ecValue"] = tdsValue;
+  reportedObj["waterLevel"] = Waterlevel;
+  reportedObj["distance"] = SensorValueCM;
+
+  reportedObj["fanOnTimer"] = fanTime;
+  reportedObj["pumpOnTimer"] = pumpTime;
+    
+  reportedObj["fan1-enabled"] = fan1;
+  reportedObj["fan2-enabled"] = fan2;
+
+  reportedObj["light1-enabled"] = light1;
+  reportedObj["light2-enabled"] = light2;
+  reportedObj["light3-enabled"] = light3;
+
+  reportedObj["lightIntensity"] = lightIntensity;
+
+  reportedObj["sunrise-hr"] = sunRiseHour;
+  reportedObj["sunrise-min"] = sunRiseMin;
+  reportedObj["sunset-hr"] = sunSetHour;
+  reportedObj["sunset-min"] = sunSetMin;
+   
+  char jsonBuffer[512];
+  serializeJson(jsonDoc, jsonBuffer); // print to client
+
+  client.publish(AWS_IOT_PUBSETTING_TOPIC, jsonBuffer);
+}
 
 int getDistance(){
   long duration,distance = 0;
@@ -524,6 +614,11 @@ void loop() {
   if( (millis() - AWSpublish_Timer) > AWSPublish_Interval){
     publishMessage();
     AWSpublish_Timer = millis();
+  }
+
+  if( (millis() - SnoozeMinute_Timer) > 60000){
+    processSnooze();
+    SnoozeMinute_Timer = millis();
   }
 }
 
@@ -628,8 +723,12 @@ float getPhValue() {
 
 void executeFanTimer() {                 ///   FAN TIMER
   int mins = Clock.getMinute();
+  int hours = Clock.getHour(h12, PM);
+  int currentMins = (hours * 60) + mins;
+  int fansunShineTime = (fansunRiseHour * 60) + fansunRiseMin;
+  int fansunSetTime = (fansunSetHour * 60) + fansunSetMin;
   Serial.println(mins);
-  if (mins < fanTime) {
+  if ((mins < fanTime) && (currentMins >= fansunShineTime && currentMins <= fansunSetTime)) {
     if (fan1) {
       Serial.println("fan1 on");
       digitalWrite(fan_1, LOW);
@@ -660,8 +759,12 @@ void executeFanTimer() {                 ///   FAN TIMER
 
 void executePump() {                //   PUMP SETTING
   int mins = Clock.getMinute();
+  int hours = Clock.getHour(h12, PM);
+  int currentMins = (hours * 60) + mins;
+  int pumpsunShineTime = (pumpsunRiseHour * 60) + pumpsunRiseMin;
+  int pumpsunSetTime = (pumpsunSetHour * 60) + pumpsunSetMin;
   Serial.println(mins);
-  if (mins < pumpTime) {
+  if ((mins < pumpTime) && (currentMins >= pumpsunShineTime && currentMins <= pumpsunSetTime)) {
     if (pump) {
       Serial.println("Pump on");
       digitalWrite(pump1, LOW);
@@ -688,7 +791,7 @@ void executeLights() {            //  RELAY CONTROL for PUMP and FAN
 
   Serial.println(sunShineTime);
   int sunSetTime = (sunSetHour * 60) + sunSetMin;
-
+  
   Serial.println(sunSetTime);
   if (currentMins >= sunShineTime && currentMins <= sunSetTime) {
     if (light1) {
@@ -719,6 +822,36 @@ void executeLights() {            //  RELAY CONTROL for PUMP and FAN
     digitalWrite(light_2, HIGH);
     Serial.println("light3 off");
     digitalWrite(light_3, HIGH);
+  }
+}
+
+void processSnooze () {
+  if(lightSnoozeTime > 0) {
+    lightSnoozeTime =-1;
+  }
+  else {
+    lightSnoozeTime = 0;
+    light1 = true;
+    light2 = true;
+    light3 = true;
+    executeLights();
+  }
+  if(fanSnoozeTime > 0) {
+    fanSnoozeTime =-1;
+  }
+  else {
+    fanSnoozeTime = 0;
+    fan1 = true;
+    fan2 = true;
+    executeFanTimer();
+  }
+  if(pumpSnoozeTime > 0) {
+    pumpSnoozeTime =-1;
+  }
+  else {
+    pumpSnoozeTime = 0;
+    pump = true;
+    executePump();
   }
 }
 

@@ -9,7 +9,7 @@ import { Events } from '@ionic/angular';
 import { Zeroconf } from "@ionic-native/zeroconf/ngx";
 import { Storage } from '@ionic/storage';
 import { NgZone } from '@angular/core';
-import { AlertController } from "@ionic/angular";
+import { AlertController, ActionSheetController } from "@ionic/angular";
 import * as AWS from 'aws-sdk';
 import creds from '../../assets/env.json';
 
@@ -38,7 +38,8 @@ export class Tab1Page {
     private events: Events,
     private zeroconf: Zeroconf,
     private zone: NgZone,
-    private alertController : AlertController
+    private alertController : AlertController,
+    private actionSheetController: ActionSheetController
   ) {
     // this.zeroconf.registerAddressFamily = 'ipv4';
     // this.zeroconf.watchAddressFamily = 'ipv4'; 
@@ -77,6 +78,7 @@ export class Tab1Page {
   apiUrl;
   bt_peripheral = null;
   bt_notif_initialized = false;
+  gardenNameSettings:any = {};
 
   airtemp = 0;
   watertemp = 0;
@@ -87,6 +89,7 @@ export class Tab1Page {
 
   ionViewDidLeave() {
     clearInterval(this.loopResult);
+    if(!this.bt_peripheral) return;
     const {id : device_id} = this.bt_peripheral;
     const charObj = this.bt_peripheral.characteristics.find(function (e) {
       return e.characteristic == "FFE1";
@@ -98,9 +101,9 @@ export class Tab1Page {
       console.log('BT failed to stop notification system.');
     });
   }
+
   ngOnDestroy() {
     clearInterval(this.loopResult);
-    // alert('page destroyed');
     if(!this.bt_peripheral) return;
     const {id : device_id} = this.bt_peripheral;
     const charObj = this.bt_peripheral.characteristics.find(function (e) {
@@ -125,6 +128,7 @@ export class Tab1Page {
     this.activeDeviceName = await this.storage.get('globalConnectedDevName');
     this.activeDevice = await this.storage.get('globalConnectedDevice');
     this.bt_peripheral = await this.storage.get('globalBtPeripheral');
+    this.gardenNameSettings = await this.storage.get('gardenNameSettings');
 
     if(this.activeConnectionMode == 'wifi') {
       this.awsiotEndpoint = await this.storage.get('awsiotEndpoint');
@@ -273,8 +277,8 @@ export class Tab1Page {
   redirectToSettings() {
     this.events.publish('change-tab', 'tab2');
     this.router.navigateByUrl('tabs/tab2');
-
   }
+
   redirect() {
     
     // CHANGE THE LINK BELOW TO REDIRECT USER TO COMPANY WEBSITE
@@ -310,6 +314,67 @@ export class Tab1Page {
 
     await alert.present();
   }
+  
+  async presentRenameGardenPrompt() {
+    const alert = await this.alertController.create({
+      cssClass: 'my-custom-class',
+      header: 'Rename Garden Device',
+      inputs: [
+        {
+          name: 'newname',
+          type: 'text',
+          placeholder: 'Garden Device Name',
+          value: this.gardenNameSettings[this.activeDevice] || this.activeDeviceName
+        }
+      ],
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+          cssClass: 'secondary',
+          handler: () => {
+            
+          }
+        }, {
+          text: 'OK',
+          handler: (inputData) => {
+            this.gardenNameSettings[this.activeDevice] = inputData.newname;
+            this.storage.set('gardenNameSettings', this.gardenNameSettings);
+          }
+        }
+      ]
+    });
+
+    await alert.present();
+  }
+
+  async presentActionSheet() {
+    const actionSheet = await this.actionSheetController.create({
+      header: this.activeDeviceName,
+      cssClass: 'my-custom-class',
+      buttons: [{
+        text: 'Rename Garden',
+        icon: 'icon-edition',
+        handler: () => {
+          this.presentRenameGardenPrompt();
+        }
+      }, {
+        text: 'Change active garden',
+        icon: 'caret-back-circle-outline',
+        handler: () => {
+          this.router.navigateByUrl('welcome');
+        }
+      }, {
+        text: 'Cancel',
+        icon: 'close',
+        role: 'cancel',
+        handler: () => {
+        }
+      }]
+    });
+    await actionSheet.present();
+  }
+
 
 
 }

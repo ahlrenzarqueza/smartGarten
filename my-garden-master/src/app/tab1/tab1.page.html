@@ -1,7 +1,10 @@
 <ion-header no-border class="top-header">
   <ion-toolbar class='upper-tab'>
       <ion-label class='tab1-top-label heading-guide-label'>Current Garden</ion-label>
-      <h1 align="center" class='top-h1'>{{activeDeviceName}}</h1>
+      <div align="center" class="ion-padding">
+        <ion-label align="center" class='top-h1'>{{gardenNameSettings[activeDevice] || activeDeviceName}}</ion-label>
+        <ion-img (click)="presentActionSheet()" class="btn-img" src='assets/new-icon/MoreDots.png'></ion-img>
+      </div>
   </ion-toolbar>
 </ion-header>
 

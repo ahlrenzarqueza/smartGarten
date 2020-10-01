@@ -33,6 +33,12 @@
 {
     height: 105px;
 }
+
+.top-header-2
+{
+    height: 70px;
+}
+
 .upper-tab
 {
     padding-top: 10px !important;
@@ -42,6 +48,17 @@
     height: 100%;
     align-content: center;
 }
+
+.upper-tab-2 
+{
+    padding-top: 0 !important;
+    padding-bottom: 10px;
+    border: #00000038 !important;
+    border-bottom-style: dotted !important;
+    height: 100%;
+    align-content: center;  
+}
+
 .upper-nav
 {
     border-bottom: black 2px;
@@ -86,6 +103,7 @@
 .top-h1
 {
     font-size: 200%;
+    font-weight: 800;
 }
 
 
@@ -168,7 +186,6 @@ ion-col
 
 .tab2-img-col
 {
-    top: 20%;
     left: 2%;
 }
 
@@ -209,9 +226,6 @@ ion-col
     height: 13vh;
 }
 
-ion-content {
-    --overflow: hidden;
-}
 @media screen and (max-width : 350px){
   
     .footer-h2
