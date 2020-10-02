@@ -57,6 +57,7 @@
     "ionic-angular": "^3.6.1",
     "rxjs": "^6.5.3",
     "rxjs-compat": "^6.5.3",
+    "shadow-dom-inject-styles": "^1.0.3",
     "tslib": "^1.9.0",
     "wifiwizard2": "^3.1.1",
     "zeroconf": "^0.1.4",

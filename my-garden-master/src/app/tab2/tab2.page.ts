@@ -33,27 +33,27 @@ export class Tab2Page {
                 ) {
     // var sunset = "12:00 am";
     
-        console.log(this.sunset);
-        this.storage.get('timeToggle').then((val)=>{this.timeToggle = val});
-        this.storage.get('fanToggle').then((val)=>{this.fanToggle = val});
-        this.storage.get('pumpToggle').then((val)=>{this.pumpToggle = val});
-        this.storage.get('fanSelect').then((val)=>{this.fanSelect = val});
-        this.storage.get('pumpSelect').then((val)=>{this.pumpSelect = val});
-        this.storage.get('sunrise').then((val)=>{if(val != null){this.sunrise = val;}});
-        this.storage.get('sunset').then((val)=>{if(val != null){this.sunset = val;}});
-        console.log('sunrise = '+this.sunrise);
-        console.log('sunset = '+this.sunset);
-        this.storage.get('timeToggle-1').then((val)=>{console.log('timeToggle-1',val);this.timeStatusArray[1] = val});
-        this.storage.get('timeToggle-2').then((val)=>{console.log('timeToggle-2',val);this.timeStatusArray[2] = val});
-        this.storage.get('timeToggle-3').then((val)=>{console.log('timeToggle-3',val);this.timeStatusArray[3] = val});
+        // console.log(this.sunset);
+        // this.storage.get('timeToggle').then((val)=>{this.timeToggle = val});
+        // this.storage.get('fanToggle').then((val)=>{this.fanToggle = val});
+        // this.storage.get('pumpToggle').then((val)=>{this.pumpToggle = val});
+        // this.storage.get('fanSelect').then((val)=>{this.fanSelect = val});
+        // this.storage.get('pumpSelect').then((val)=>{this.pumpSelect = val});
+        // this.storage.get('sunrise').then((val)=>{if(val != null){this.sunrise = val;}});
+        // this.storage.get('sunset').then((val)=>{if(val != null){this.sunset = val;}});
+        // console.log('sunrise = '+this.sunrise);
+        // console.log('sunset = '+this.sunset);
+        // this.storage.get('timeToggle-1').then((val)=>{console.log('timeToggle-1',val);this.timeStatusArray[1] = val});
+        // this.storage.get('timeToggle-2').then((val)=>{console.log('timeToggle-2',val);this.timeStatusArray[2] = val});
+        // this.storage.get('timeToggle-3').then((val)=>{console.log('timeToggle-3',val);this.timeStatusArray[3] = val});
         
-        this.storage.get('fanToggle-1').then((val)=>{console.log('fanToggle-1',val);this.fanStatusArray[1] = val});        
-        this.storage.get('fanToggle-2').then((val)=>{console.log('fanToggle-2',val);this.fanStatusArray[2] = val});
-        console.log('below is zeroconf');
-        if(this.wifi_ip == null)
-        {
-          this.storage.get('global_wifi_ip').then( val => {this.wifi_ip = val});
-        }
+        // this.storage.get('fanToggle-1').then((val)=>{console.log('fanToggle-1',val);this.fanStatusArray[1] = val});        
+        // this.storage.get('fanToggle-2').then((val)=>{console.log('fanToggle-2',val);this.fanStatusArray[2] = val});
+        // console.log('below is zeroconf');
+        // if(this.wifi_ip == null)
+        // {
+        //   this.storage.get('global_wifi_ip').then( val => {this.wifi_ip = val});
+        // }
 
   }
 
@@ -73,6 +73,7 @@ export class Tab2Page {
   bt_peripheral = null;
   pendingBtWritePrm = null;
   snoozeTimeCheck = null;
+  clockCheck = null;
 
   datetimertc = new Date(0);
   timeToggle;
@@ -101,8 +102,9 @@ export class Tab2Page {
   wifi_ip = null;
   apiUrl: string;
   postJsonObj :any = {};
+  initializedSetting = {};
 
-  async ionViewWillEnter()
+  async ionViewDidEnter()
   {
     const me = this;
     this.activeConnectionMode = await this.storage.get('globalConnectionMode');
@@ -116,7 +118,7 @@ export class Tab2Page {
         endpoint: this.awsiotEndpoint,
         apiVersion: '2015-05-28'
       }); 
-      var params = {
+      let params = {
         thingName: this.activeDevice, /* required */
         shadowName: 'Settings'
       };
@@ -148,7 +150,6 @@ export class Tab2Page {
           me.pumpSnoozeRemaining = state.reported['pumpSnoozeRemaining'];
           me.lightIntensity = state.reported['lightIntensity'];
           me.datetimertc = new Date(parseInt(state.reported['datetimertc']));
-          debugger
           var sunrisetime = new Date();
           sunrisetime.setHours(state.reported['sunrise-hr']);
           sunrisetime.setMinutes(state.reported['sunrise-min']);
@@ -178,44 +179,25 @@ export class Tab2Page {
           me.pumpsunset = pumpsunsettime.toISOString();
         }
 
-        this.snoozeTimeCheck = setInterval(()=>{
-          me.awsiotdata.getThingShadow(params, function(err, data) {
-            if (err) {
-              console.log('AWS IOT Connection Error:', err);
-              me.presentAlert('Error in getting snooze data. Please reconnect to a device again.', 'AWS IOT Connection Error');
-              me.router.navigateByUrl('welcome');
-            }
-            else {
-              const shadowdt = JSON.parse(data.payload);
-              const state = shadowdt.state;
-              const {fanSnoozeRemaining, lightSnoozeRemaining, pumpSnoozeRemaining} = state.reported;
-              if(fanSnoozeRemaining == 0) {
-                me.fanSnooze = false;
-              }
-              me.fanSnoozeRemaining = fanSnoozeRemaining;
-
-              if(lightSnoozeRemaining == 0) {
-                me.lightSnooze = false;
-              }
-              me.lightSnoozeRemaining = lightSnoozeRemaining;
-
-              if(pumpSnoozeRemaining == 0) {
-                me.pumpSnooze = false;
-              }
-              me.pumpSnoozeRemaining = pumpSnoozeRemaining;
-            }
-          });
-        }, 30000);
+        me.snoozeCheckInterval();
+        me.clockCheckInterval();
+      
       });
     // }
   }
 
+  ionViewWillEnter() {
+
+  }
+
   ionViewDidLeave() {
     if(this.snoozeTimeCheck) clearInterval(this.snoozeTimeCheck);
+    if(this.clockCheck) clearInterval(this.clockCheck);
   }
 
   ngOnDestroy() {
     if(this.snoozeTimeCheck) clearInterval(this.snoozeTimeCheck);
+    if(this.clockCheck) clearInterval(this.clockCheck);
   }
 
   async showLoader() {
@@ -242,7 +224,7 @@ export class Tab2Page {
       const pumpsunsetdate = new Date(this.pumpsunset);
       const state = {
         state: {
-          reported: {
+          desired: {
             // "fanLevel": this.fanSelect,
             // "pumpLevel": this.pumpSelect,
             "fanOnTimer": this.fanOnTimer,
@@ -266,9 +248,9 @@ export class Tab2Page {
             "pumpsunset-hr": pumpsunsetdate.getHours(),
             "pumpsunset-min": pumpsunsetdate.getMinutes(),
             "lightIntensity": this.lightIntensity,
-            "fanSnoozeRemaining": btdata && btdata['fanSnoozeRemaining'] != undefined ? btdata['fanSnoozeRemaining'] : undefined,
-            "lightSnoozeRemaining": btdata && btdata['lightSnoozeRemaining'] != undefined ? btdata['lightSnoozeRemaining'] : undefined,
-            "pumpSnoozeRemaining": btdata && btdata['pumpSnoozeRemaining'] != undefined ? btdata['pumpSnoozeRemaining'] : undefined
+            "fanSnoozeRemaining": btdata && btdata['fsr'] != undefined ? btdata['fsr'] : undefined,
+            "lightSnoozeRemaining": btdata && btdata['lsr'] != undefined ? btdata['lsr'] : undefined,
+            "pumpSnoozeRemaining": btdata && btdata['psr'] != undefined ? btdata['psr'] : undefined
           }
         }
       }
@@ -340,6 +322,10 @@ export class Tab2Page {
 
   sunsetFunc()
   {
+    if(!this.initializedSetting['sunset']) {
+      this.initializedSetting['sunset'] = true;
+      return;
+    }
     let dateObj = new Date(this.sunset.toString());
     console.log(this.sunset, dateObj.getHours(), dateObj.getMinutes());
     this.postJsonObj["sun_set_hour"]=dateObj.getHours();
@@ -354,6 +340,10 @@ export class Tab2Page {
 
   fansunsetFunc()
   {
+    if(!this.initializedSetting['fansunset']) {
+      this.initializedSetting['fansunset'] = true;
+      return;
+    }
     let dateObj = new Date(this.fansunset.toString());
     console.log(this.fansunset, dateObj.getHours(), dateObj.getMinutes());
     this.postJsonObj["fansun_set_hour"]=dateObj.getHours();
@@ -368,6 +358,10 @@ export class Tab2Page {
 
   pumpsunsetFunc()
   {
+    if(!this.initializedSetting['pumpsunset']) {
+      this.initializedSetting['pumpsunset'] = true;
+      return;
+    }
     let dateObj = new Date(this.pumpsunset.toString());
     console.log(this.pumpsunset, dateObj.getHours(), dateObj.getMinutes());
     this.postJsonObj["pumpsun_set_hour"]=dateObj.getHours();
@@ -382,6 +376,10 @@ export class Tab2Page {
 
   sunriseFunc()
   {
+    if(!this.initializedSetting['sunrise']) {
+      this.initializedSetting['sunrise'] = true;
+      return;
+    }
     let dateObj = new Date(this.sunrise.toString());
     console.log(this.sunrise, dateObj.getHours(), dateObj.getMinutes());
     this.postJsonObj["sun_rise_hour"]=dateObj.getHours();
@@ -397,6 +395,10 @@ export class Tab2Page {
 
   fansunriseFunc()
   {
+    if(!this.initializedSetting['fansunrise']) {
+      this.initializedSetting['fansunrise'] = true;
+      return;
+    }
     let dateObj = new Date(this.fansunrise.toString());
     console.log(this.fansunrise, dateObj.getHours(), dateObj.getMinutes());
     this.postJsonObj["fansun_rise_hour"]=dateObj.getHours();
@@ -412,6 +414,10 @@ export class Tab2Page {
 
   pumpsunriseFunc()
   {
+    if(!this.initializedSetting['pumpsunrise']) {
+      this.initializedSetting['pumpsunrise'] = true;
+      return;
+    }
     let dateObj = new Date(this.pumpsunrise.toString());
     console.log(this.pumpsunrise, dateObj.getHours(), dateObj.getMinutes());
     this.postJsonObj["pumpsun_rise_hour"]=dateObj.getHours();
@@ -547,15 +553,21 @@ export class Tab2Page {
     this.datetimertc = new Date();
     const state = {
       state: {
-        reported: {
-          "datetimertc": this.datetimertc.getTime().toString()
+        desired: {
+          "year": parseInt(this.datetimertc.getFullYear().toString().substr(2)),
+          "month": this.datetimertc.getMonth() + 1,
+          "date": this.datetimertc.getDate(),
+          "hour": this.datetimertc.getHours(),
+          "minute": this.datetimertc.getMinutes(),
+          "second": this.datetimertc.getSeconds(),
+          "dow": this.datetimertc.getDay(),
         }
       }
     }
     var params = {
       payload: JSON.stringify(state),
       thingName: this.activeDevice,
-      shadowName: 'Settings'
+      shadowName: 'Clock'
     };
 
     this.awsiotdata.updateThingShadow(params, function(err, data) {
@@ -651,6 +663,105 @@ export class Tab2Page {
       ['lightIntensity']: this.lightIntensity
     };
     this.handleDataChangeApi(bt_set_obj);
+  }
+
+  snoozeCheckInterval () {
+    const me = this;
+    let params = {
+      thingName: this.activeDevice, /* required */
+      shadowName: 'Settings'
+    };
+    let checkFunction = function () {
+      me.awsiotdata.getThingShadow(params, function(err, data) {
+        if (err) {
+          console.log('AWS IOT Connection Error:', err);
+          me.presentAlert('Error in getting snooze data. Please reconnect to a device again.', 'AWS IOT Connection Error');
+          me.router.navigateByUrl('welcome');
+        }
+        else {
+          const shadowdt = JSON.parse(data.payload);
+          const state = shadowdt.state;
+          const {fanSnoozeRemaining, lightSnoozeRemaining, pumpSnoozeRemaining} = state.reported;
+
+          if(fanSnoozeRemaining == 0) {
+            me.fanSnooze = false;
+            me.fanToggle = true;
+            me.fanStatusArray[1] = state.reported['fan1-enabled'];
+            me.fanStatusArray[2] = state.reported['fan2-enabled'];
+          }
+          else {
+            me.fanSnooze = true;
+            me.fanToggle = false;
+            me.fanStatusArray[1] = false
+            me.fanStatusArray[2] = false
+          }
+          me.fanSnoozeRemaining = fanSnoozeRemaining;
+
+          if(lightSnoozeRemaining == 0) {
+            me.lightSnooze = false;
+            me.timeToggle = true;
+            me.timeStatusArray[1] = state.reported['light1-enabled'];
+            me.timeStatusArray[2] = state.reported['light2-enabled'];
+            me.timeStatusArray[3] = state.reported['light3-enabled'];
+          }
+          else {
+            me.lightSnooze = true;
+            me.timeToggle = false;
+            me.timeStatusArray[1] = false;
+            me.timeStatusArray[2] = false;
+            me.timeStatusArray[3] = false;
+          }
+          me.lightSnoozeRemaining = lightSnoozeRemaining;
+
+          me.pumpToggle = state.reported['pump-enabled'];
+          if(pumpSnoozeRemaining == 0) {
+            me.pumpSnooze = false;
+            me.pumpToggle = state.reported['pump-enabled'];
+          }
+          else {
+            me.pumpSnooze = true;
+            me.pumpToggle = false;
+          }
+          me.pumpSnoozeRemaining = pumpSnoozeRemaining;
+        }
+      });
+    }
+    checkFunction();
+    this.snoozeTimeCheck = setInterval(()=>{
+      checkFunction();
+    }, 30000);
+  }
+
+  clockCheckInterval () {
+    const me = this;
+    let clockparams = {
+      thingName: me.activeDevice, /* required */
+      shadowName: 'Clock'
+    };
+    let checkFunction = function () {
+      me.awsiotdata.getThingShadow(clockparams, function(err, data) {
+        if (err) {
+          console.log('AWS IOT Connection Error:', err);
+          me.presentAlert('Error in getting snooze data. Please reconnect to a device again.', 'AWS IOT Connection Error');
+          me.router.navigateByUrl('welcome');
+        }
+        else {
+          const shadowdt = JSON.parse(data.payload);
+          const state = shadowdt.state;
+          const {year, month, date, dow, hour, minute, second} = state.reported;
+          const dateObj = new Date();
+          dateObj.setFullYear(year, month - 1, date);
+          dateObj.setHours(hour);
+          dateObj.setMinutes(minute);
+          dateObj.setSeconds(second);
+          me.datetimertc = dateObj;
+        }
+      });
+    }
+    checkFunction();
+    me.clockCheck = setInterval(()=>{
+      checkFunction();
+    }, 30000);
   }
 
   redirect() {

@@ -6,26 +6,25 @@
 
 <ion-content no-bounce style="overflow: hidden;">
   <ion-grid style="padding:0%;height:100%">
-    <ion-row align='center' style="height:10%">
+    <ion-row align='center' style="height:5%">
         
     </ion-row>
     
-    <ion-row align='center' style="height:30%">
+    <ion-row align='center' style="height:35%">
       <ion-col style="height:100%">
         <!-- LOGO IMG HERE  -->
         <ion-img src='assets/icon/logo.png' style="height:100%"></ion-img>
       </ion-col>
     </ion-row>
 
-    <ion-row align='center' style="height:10%">
+    <ion-row align='center' style="height:5%">
         
     </ion-row>
 
-    <ion-row align='center'>
+    <ion-row align='center' style="height:35%">
       <!-- <ion-col size='1'></ion-col> -->
       <ion-col size='12'>
-        <h1><b>Select Garden</b></h1>
-        <ion-radio-group value="wifi" (ionChange)="onConnModeChange($event)">
+        <!-- <ion-radio-group value="wifi" (ionChange)="onConnModeChange($event)">
           <ion-grid style="padding:0%;height:auto">
             <ion-row>
               <ion-list-header>
@@ -35,19 +34,30 @@
             <ion-row>
               <ion-col size='6'>
                 <ion-item lines="none">
-                  <ion-label>IoT</ion-label>
+                  <ion-icon name="wifi"></ion-icon>
                   <ion-radio slot="start" value="wifi"></ion-radio>
                 </ion-item>
               </ion-col>
               <ion-col size='6'>
                 <ion-item lines="none">
-                  <ion-label>Bluetooth</ion-label>
+                  <ion-icon name="bluetooth"></ion-icon>
                   <ion-radio slot="start" value="bluetooth"></ion-radio>
                 </ion-item>
               </ion-col>
             </ion-row>
           </ion-grid>
-        </ion-radio-group>
+        </ion-radio-group> -->
+
+        <ion-segment style="height:40%" value="wifi" (ionChange)="onConnModeChange($event)">
+          <ion-segment-button value="wifi">
+            <!-- <ion-label>Friends</ion-label> -->
+            <ion-icon class="ion-segment-icon" name="wifi"></ion-icon>
+          </ion-segment-button>
+          <ion-segment-button value="bluetooth">
+            <ion-icon class="ion-segment-icon" name="bluetooth"></ion-icon>
+          </ion-segment-button>
+        </ion-segment>
+
         <ion-item *ngIf = "connectionMode == 'wifi'">
           <ion-label class="device-select-header">Choose an IoT Garden Device</ion-label>
           <ion-select placeholder="Choose an IoT Garden Device" [(ngModel)] = 'selected_wifi' style="width: 100%; max-width: unset;">
@@ -68,7 +78,7 @@
     <ion-row align='center'>
         <ion-col size='3'></ion-col>
         <ion-col size='6'>
-            <ion-button color='custgreen' (click) = "connect()">Connect!</ion-button>
+            <ion-button style="width: 100%; height: 15mm;" color='custgreen' (click) = "connect()">Connect!</ion-button>
         </ion-col>
         <ion-col size='3'></ion-col>
     </ion-row>

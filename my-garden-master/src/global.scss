@@ -164,7 +164,7 @@ ion-col
 .icon-img
 {
     // height: 50%;
-    width: 40px;
+    width: 60%;
     // padding-top: 63%;
 }
 
@@ -253,6 +253,16 @@ ion-col
     align-items: center !important;
 }
 
+ion-toast {
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    --background: #b58924;
+    --button-color: white;
+}
+
+ion-toast::part(header) {
+    text-transform: uppercase;
+    font-weight: 800;
+}
 
 
 h,h1,h2,h3,h4,h5,h6,p
@@ -271,6 +281,13 @@ h,h1,h2,h3,h4,h5,h6,p
     font-family: 'Josefin Slab';
     src: url('/assets/fonts/Josefin_Slab/JosefinSlab-ExtraLight.ttf');
     font-weight: 200;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Josefin Slab';
+    src: url('/assets/fonts/Josefin_Slab/JosefinSlab-SemiBold.ttf');
+    font-weight: 500;
     font-style: normal;
 }
 

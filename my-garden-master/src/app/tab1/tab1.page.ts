@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ElementRef, ViewChild } from '@angular/core';
 import { InAppBrowser } from '@ionic-native/in-app-browser/ngx'
 import { HttpClient } from "@angular/common/http";
 import { Platform } from "@ionic/angular";
@@ -9,7 +9,7 @@ import { Events } from '@ionic/angular';
 import { Zeroconf } from "@ionic-native/zeroconf/ngx";
 import { Storage } from '@ionic/storage';
 import { NgZone } from '@angular/core';
-import { AlertController, ActionSheetController } from "@ionic/angular";
+import { AlertController, ActionSheetController, ToastController } from "@ionic/angular";
 import * as AWS from 'aws-sdk';
 import creds from '../../assets/env.json';
 
@@ -39,7 +39,8 @@ export class Tab1Page {
     private zeroconf: Zeroconf,
     private zone: NgZone,
     private alertController : AlertController,
-    private actionSheetController: ActionSheetController
+    private actionSheetController: ActionSheetController,
+    private toastController: ToastController
   ) {
     // this.zeroconf.registerAddressFamily = 'ipv4';
     // this.zeroconf.watchAddressFamily = 'ipv4'; 
@@ -68,7 +69,6 @@ export class Tab1Page {
     //   }
     // }
   }
-
   awsiotdata:any = null;
   awsiotEndpoint = null;
   activeDevice = null;
@@ -78,8 +78,10 @@ export class Tab1Page {
   apiUrl;
   bt_peripheral = null;
   bt_notif_initialized = false;
+  toastDismissSnooze = false;
   gardenNameSettings:any = {};
 
+  toastInstances = [];
   airtemp = 0;
   watertemp = 0;
   humid = 0;
@@ -118,7 +120,6 @@ export class Tab1Page {
   }
 
   async ionViewWillEnter() {
-
 
     if (this.loopResult != null) {
       clearInterval(this.loopResult);
@@ -179,22 +180,6 @@ export class Tab1Page {
   async getResults() {
     const me = this;
     if(this.activeConnectionMode == 'wifi') {
-      // TODO: Deprecated For Wi-Fi Get Results
-      // console.log('http://' + this.wifi_ip + "/getData");
-      // this.apiUrl = 'http://' + this.wifi_ip + "/getData";
-      // // this.apiUrl ="http://192.168.4.1/getData";
-      // // alert(this.apiUrl);
-      // if (this.wifi_ip) {
-      //   this.http.get(this.apiUrl).subscribe(data => {
-      //     // alert(data)
-      //     console.log("data", data)
-      //     this.airtemp = data["temparature"];
-      //     this.humid = data["humidity"];
-      //     this.waterlevel = data["waterlevel"];
-      //     this.phValue = data["phvalue"];
-      //   });
-      // }
-
       //AWS IOT DATA
       var params = {
         thingName: this.activeDevice, /* required */
@@ -213,9 +198,10 @@ export class Tab1Page {
           me.airtemp = parseFloat(state.reported.airTemperature);
           me.humid = parseFloat(state.reported.humidity);
           me.phValue = parseFloat(state.reported.phValue);
-          me.ecValue = parseFloat(state.reported.ecValue);
+          me.ecValue = (parseFloat(state.reported.tdsValue) * 2) / 1000;
           me.waterlevel = parseFloat(state.reported.waterLevel);
           me.watertemp = parseFloat(state.reported.waterTemperature);
+          me.checkWarningTriggers();
         }
       });
     }
@@ -253,6 +239,7 @@ export class Tab1Page {
                 me.watertemp = parseFloat(keyval[1]);
                 break;
             }
+            me.checkWarningTriggers();
           });
         }, (error) => {
           console.log('BT Read Notification Error: ', error);
@@ -272,6 +259,46 @@ export class Tab1Page {
   async loopGetResults() {
     const interval = this.activeConnectionMode == 'wifi' ? 5000 : 7000;
     this.loopResult = setInterval(() => { this.getResults(); }, interval);
+  }
+
+  checkWarningTriggers() {
+    const me = this;
+    if(me.airtemp > 45) {
+      me.presentWarningToast("airtemp", "Threshold reached: Air Temperature is now at " + me.airtemp + "°C");
+    }
+    if(me.airtemp < 10) {
+      me.presentWarningToast("airtemp", "Threshold reached: Air Temperature is now at " + me.airtemp + "°C");
+    }
+    if(me.humid > 65) {
+      me.presentWarningToast("humid", "High Humidity: Humidity is now at " + me.humid + "%");
+    }
+    if(me.humid < 30) {
+      me.presentWarningToast("humid", "Low Humidity: Humidity is now at " + me.humid + "%");
+    }
+    if(me.phValue > 7) {
+      me.presentWarningToast("phValue", "High pH concentration: Now at " + me.phValue);
+    }
+    if(me.phValue < 5) {
+      me.presentWarningToast("phValue", "Low pH concentration: Now at " + me.phValue);
+    }
+    if(me.ecValue > 2) {
+      me.presentWarningToast("ecValue", "High EC Value: Now at " + me.ecValue);
+    }
+    if(me.ecValue < 0.5) {
+      me.presentWarningToast("ecValue", "High EC Value: Now at " + me.ecValue);
+    }
+    if(me.watertemp > 45) {
+      me.presentWarningToast("watertemp", "Max Threshold reached: Water Temperature is now at " + me.watertemp + "°C");
+    }
+    if(me.watertemp < 10) {
+      me.presentWarningToast("watertemp", "Min Threshold reached: Water Temperature is now at " + me.watertemp + "°C");
+    }
+    if(me.waterlevel > 100) {
+      me.presentWarningToast("waterlevel", "Maximum Level threshold: Water Level is now at " + me.waterlevel + "%");
+    }
+    if(me.waterlevel < 10) {
+      me.presentWarningToast("waterlevel", "Minimum Level threshold: Water Level is now at " + me.waterlevel + "%");
+    }
   }
 
   redirectToSettings() {
@@ -375,6 +402,31 @@ export class Tab1Page {
     await actionSheet.present();
   }
 
-
-
+  async presentWarningToast(toastid, message:string) {
+    const me = this;
+    if(me.toastDismissSnooze) return;
+    if(this.toastInstances[toastid]) {
+      this.toastInstances[toastid].dismiss();
+    }
+    const toast = await this.toastController.create({
+      header: 'Warning',
+      message: message,
+      position: 'bottom',
+      cssClass: 'warning-toast',
+      buttons: [
+        {
+          text: 'Dismiss  (5 mins)',
+          handler: () => {
+            toast.dismiss();
+            me.toastDismissSnooze = true;
+            setTimeout(function () {
+              me.toastDismissSnooze = false;
+            }, 300000)
+          }
+        }
+      ]
+    });
+    toast.present();
+    this.toastInstances[toastid] = toast;
+  }
 }

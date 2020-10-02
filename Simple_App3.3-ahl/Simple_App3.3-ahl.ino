@@ -26,15 +26,22 @@
 // The MQTT topics that this device should publish/subscribe
 String AWS_IOT_PUBLISH_TOPIC = "$aws/things/" + String(AWS_IOT_ID) + "/shadow/name/Measurements/update";
 String AWS_IOT_PUBSETTING_TOPIC = "$aws/things/" + String(AWS_IOT_ID) + "/shadow/name/Settings/update";
+String AWS_IOT_PUBCLOCK_TOPIC = "$aws/things/" + String(AWS_IOT_ID) + "/shadow/name/Clock/update";
 String AWS_IOT_SUBSCRIBE_TOPIC = "$aws/things/" + String(AWS_IOT_ID) + "/shadow/name/Settings/update/accepted";
+String AWS_IOT_SUBCLOCK_TOPIC = "$aws/things/" + String(AWS_IOT_ID) + "/shadow/name/Clock/update/accepted";
+
+boolean OnPubSettingCycle = false;
+boolean OnPubClockCycle = false;
 
 WiFiClientSecure net = WiFiClientSecure();
 MQTTClient client = MQTTClient(256);
 
 unsigned long int AWSpublish_Timer = 0;
+unsigned long int Clockpublish_Timer = 0;
 unsigned long int SnoozeMinute_Timer = 0;
 
 int AWSPublish_Interval = 3000;
+int Clockpublish_Interval = 30000;
 
 #define DHTTYPE DHT11   // DHT 11
 
@@ -278,19 +285,24 @@ void bt_messageHandler() {
 }
 
 void handleSettingsUpdate(String &topic, String &payload) {
-  if(topic == String(AWS_IOT_ID) + String("_ClockUpdate")) {
-    Serial.println("AWS IoT Incoming Settings: " + topic + " - " + payload);
+  if(topic == AWS_IOT_SUBCLOCK_TOPIC) {
+    if(OnPubClockCycle == true) {
+      Serial.println("AWS IoT Clock Update Acknowledged from Device: " + topic + " - " + payload);
+      OnPubClockCycle = false;
+      return;
+    }
+    Serial.println("AWS IoT Incoming Clock Update: " + topic + " - " + payload);
 
     StaticJsonDocument<200> doc;
     deserializeJson(doc, payload);
     
-    const int year = doc["year"];
-    const int month = doc["month"];
-    const int date = doc["date"];
-    const int dow = doc["dow"];
-    const int hour = doc["hour"];
-    const int minute = doc["minute"];
-    const int second = doc["second"];
+    const int year = doc["state"]["desired"]["year"];
+    const int month = doc["state"]["desired"]["month"];
+    const int date = doc["state"]["desired"]["date"];
+    const int dow = doc["state"]["desired"]["dow"];
+    const int hour = doc["state"]["desired"]["hour"];
+    const int minute = doc["state"]["desired"]["minute"];
+    const int second = doc["state"]["desired"]["second"];
 
     Clock.setYear(year);
     Clock.setMonth(month);
@@ -300,8 +312,13 @@ void handleSettingsUpdate(String &topic, String &payload) {
     Clock.setMinute(minute);
     Clock.setSecond(second);
   }
-  else {
-    Serial.println("AWS IoT Incoming Settings: " + topic + " - " + payload);
+  else if(topic == AWS_IOT_SUBSCRIBE_TOPIC) {
+    if(OnPubSettingCycle == true) {
+      Serial.println("AWS IoT Settings Acknowledged from Device: " + topic + " - " + payload);
+      OnPubSettingCycle = false;
+      return;
+    }
+    Serial.println("AWS IoT Incoming Settings Update: " + topic + " - " + payload);
 
     StaticJsonDocument<200> doc;
     deserializeJson(doc, payload);
@@ -360,9 +377,22 @@ void handleSettingsUpdate(String &topic, String &payload) {
 
     fanTime = fanOnTimer;
     pumpTime = pumpOnTimer;
-    lightSnoozeTime = lightSnoozeRemaining;
-    fanSnoozeTime = fanSnoozeRemaining;
-    pumpSnoozeTime = pumpSnoozeRemaining;
+
+    if(lightSnoozeRemaining) {
+      lightSnoozeTime = lightSnoozeRemaining;
+    } else {
+      lightSnoozeTime = 0;
+    }
+    if(fanSnoozeRemaining) {
+      fanSnoozeTime = fanSnoozeRemaining;
+    } else {
+      fanSnoozeTime = 0;
+    }
+    if(pumpSnoozeRemaining) {
+      pumpSnoozeTime = pumpSnoozeRemaining;
+    } else {
+      pumpSnoozeTime = 0;
+    }
 
     if(lightSnoozeTime > 0) {
       light1 = false;
@@ -413,7 +443,7 @@ void handleSettingsUpdate(String &topic, String &payload) {
     pumpsunRiseMin = pumpsun_rise_minDoc;
     pumpsunSetHour = pumpsun_set_hourDoc;
     pumpsunSetMin = pumpsun_set_minDoc;
-    publishSettings();
+//    publishSettings();
   }
 }
 
@@ -468,7 +498,7 @@ void connectAWS()
 
   // Subscribe to a topic
   client.subscribe(AWS_IOT_SUBSCRIBE_TOPIC);
-  client.subscribe(String(AWS_IOT_ID) + String("_ClockUpdate"));
+  client.subscribe(AWS_IOT_SUBCLOCK_TOPIC);
 
   Serial.println("AWS IoT Connected!");
 }
@@ -513,16 +543,9 @@ void publishSettings()
   JsonObject stateObj = jsonDoc.createNestedObject("state");
   JsonObject reportedObj = stateObj.createNestedObject("reported");
 
-  reportedObj["humidity"] = Humidity,
-  reportedObj["waterTemperature"] = Temperature_DS18B20;
-  reportedObj["airTemperature"] = Temperature;
-  reportedObj["phValue"] = PHValue;
-  reportedObj["ecValue"] = tdsValue;
-  reportedObj["waterLevel"] = Waterlevel;
-  reportedObj["distance"] = SensorValueCM;
-
   reportedObj["fanOnTimer"] = fanTime;
   reportedObj["pumpOnTimer"] = pumpTime;
+  reportedObj["lightIntensity"] = lightIntensity;
     
   reportedObj["fan1-enabled"] = fan1;
   reportedObj["fan2-enabled"] = fan2;
@@ -531,17 +554,66 @@ void publishSettings()
   reportedObj["light2-enabled"] = light2;
   reportedObj["light3-enabled"] = light3;
 
-  reportedObj["lightIntensity"] = lightIntensity;
-
   reportedObj["sunrise-hr"] = sunRiseHour;
   reportedObj["sunrise-min"] = sunRiseMin;
   reportedObj["sunset-hr"] = sunSetHour;
   reportedObj["sunset-min"] = sunSetMin;
+
+  reportedObj["fansunrise-hr"] = fansunRiseHour;
+  reportedObj["fansunrise-min"] = fansunRiseMin;
+  reportedObj["fansunset-hr"] = fansunSetHour;
+  reportedObj["fansunset-min"] = fansunSetMin;
+
+  reportedObj["pumpsunrise-hr"] = pumpsunRiseHour;
+  reportedObj["pumpsunrise-min"] = pumpsunRiseMin;
+  reportedObj["pumpsunset-hr"] = pumpsunSetHour;
+  reportedObj["pumpsunset-min"] = pumpsunSetMin;
+
+  if(fanSnoozeTime == -1) {
+    reportedObj["fanSnoozeRemaining"] = 0;
+  }
+  else {
+    reportedObj["fanSnoozeRemaining"] = fanSnoozeTime;
+  }
+
+  if(pumpSnoozeTime == -1) {
+    reportedObj["pumpSnoozeRemaining"] = 0;
+  }
+  else {
+    reportedObj["pumpSnoozeRemaining"] = pumpSnoozeTime;
+  }
+
+  if(lightSnoozeTime == -1) {
+    reportedObj["lightSnoozeRemaining"] = 0;
+  }
+  else {
+    reportedObj["lightSnoozeRemaining"] = lightSnoozeTime;
+  }
+   
+  char jsonBuffer[512];
+  serializeJson(jsonDoc, jsonBuffer); // print to client
+  OnPubSettingCycle = true;
+  client.publish(AWS_IOT_PUBSETTING_TOPIC, jsonBuffer);
+}
+
+void publishRTC()
+{
+  StaticJsonDocument<512> jsonDoc;
+  JsonObject stateObj = jsonDoc.createNestedObject("state");
+  JsonObject reportedObj = stateObj.createNestedObject("reported");
+
+  reportedObj["year"] = Clock.getYear();
+  reportedObj["month"] = Clock.getMonth(Century);
+  reportedObj["date"] = Clock.getDate();
+  reportedObj["dow"] = Clock.getDoW();
+  reportedObj["hour"] = Clock.getHour(h12, PM);
+  reportedObj["minute"] = Clock.getMinute();
+  reportedObj["second"] = Clock.getSecond();
    
   char jsonBuffer[512];
   serializeJson(jsonDoc, jsonBuffer); // print to client
 
-  client.publish(AWS_IOT_PUBSETTING_TOPIC, jsonBuffer);
+  client.publish(AWS_IOT_PUBCLOCK_TOPIC, jsonBuffer);
 }
 
 int getDistance(){
@@ -616,47 +688,16 @@ void loop() {
     AWSpublish_Timer = millis();
   }
 
+  if( (millis() - Clockpublish_Timer) > Clockpublish_Interval){
+    publishRTC();
+    Clockpublish_Timer = millis();
+  }
+
   if( (millis() - SnoozeMinute_Timer) > 60000){
     processSnooze();
     SnoozeMinute_Timer = millis();
   }
 }
-
-//void handle_OnConnect() {
-//
-//  Temperature = dht.readTemperature(); // Gets the values of the temperature
-//  Humidity = dht.readHumidity(); // Gets the values of the humidity
-//  SensorValueCM = getDistance();
-//  Waterlevel = (1 - (SensorValueCM - SensorSafetyDistance) / (SensorHeight - SensorSafetyDistance)) * 100;
-//  PHValue = getPhValue();
-//
-//  ds18b20.requestTemperatures();
-//  while (!ds18b20.isConversionComplete());  // wait until sensor is ready
-//  Temperature_DS18B20 = ds18b20.getTempC();
-//
-//  gravityTds.setTemperature(Temperature_DS18B20);  // set the temperature and execute temperature compensation
-//  gravityTds.update();  //sample and calculate
-//  tdsValue = gravityTds.getTdsValue();  // then get the value
-//
-//
-//  server.sendHeader("Access-Control-Allow-Origin", "*");
-//  server.sendHeader("Allow", "HEAD,GET,PUT,POST,DELETE,OPTIONS");
-//  server.sendHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT");
-//  server.sendHeader("Access-Control-Allow-Headers", "X-Requested-With, X-HTTP-Method-Override, Content-Type, Cache-Control, Accept");
-//
-//  server.send(200, "application/json", SendHTML(Temperature, Humidity, Waterlevel, PHValue, Temperature_DS18B20, tdsValue));
-//  for (int i = 0; i < 100; i++) {
-//    dimmer.setPower(i); // name.setPower(0%-100%)
-//  }
-//  for (int i = 100; i > 0; i--) {
-//    dimmer.setPower(i); // name.setPower(0%-100%)
-//  }
-//
-//}
-
-//void handle_NotFound() {
-//  server.send(404, "text/plain", "Not found");
-//}
 
 String SendHTML(float Temperaturestat, float Humiditystat, float Waterlevel, float PHValue, float Temp_DS18B20, float Temp_tdsValue) {  /// ALL the sensor data is send from here
   String ptr = "{\"temparature\":";
@@ -827,31 +868,34 @@ void executeLights() {            //  RELAY CONTROL for PUMP and FAN
 
 void processSnooze () {
   if(lightSnoozeTime > 0) {
-    lightSnoozeTime =-1;
+    lightSnoozeTime--;
   }
-  else {
-    lightSnoozeTime = 0;
+  else if(lightSnoozeTime == 0) {
+    lightSnoozeTime = -1;
     light1 = true;
     light2 = true;
     light3 = true;
     executeLights();
+    publishSettings();
   }
   if(fanSnoozeTime > 0) {
-    fanSnoozeTime =-1;
+    fanSnoozeTime--;
   }
-  else {
-    fanSnoozeTime = 0;
+  else if(fanSnoozeTime == 0) {
+    fanSnoozeTime = -1;
     fan1 = true;
     fan2 = true;
     executeFanTimer();
+    publishSettings();
   }
   if(pumpSnoozeTime > 0) {
-    pumpSnoozeTime =-1;
+    pumpSnoozeTime--;
   }
-  else {
-    pumpSnoozeTime = 0;
+  else if(pumpSnoozeTime == 0) {
+    pumpSnoozeTime = -1;
     pump = true;
     executePump();
+    publishSettings();
   }
 }
 

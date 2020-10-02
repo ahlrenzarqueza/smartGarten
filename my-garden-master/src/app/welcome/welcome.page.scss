@@ -9,4 +9,18 @@
     --ion-color-tint: #5A9558;
 }
 
+ion-segment {
+  padding: 4mm 10mm
+}
+
+ion-segment-button {
+  --background-checked: #5a955885;
+  --indicator-color-checked: transparent;
+}
+
+.ion-segment-icon {
+  font-size: 40px;
+  color: gray !important;
+}
+
   // .scroll-content{overflow-y: hidden;}

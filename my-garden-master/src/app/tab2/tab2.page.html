@@ -56,7 +56,7 @@
               Snooze: 
             </h4>
             <ion-toggle mode='md'  [(ngModel)] = 'lightSnooze' (ngModelChange) = 'lightSnoozeSet()'  color="custgreen" class="tab2-snooze-toggle toggle-calm" ></ion-toggle>
-            <ion-label class="snooze-label">{{(lightSnooze == true) ? lightSnoozeRemaining + ' mins' : 'OFF'}}</ion-label>
+            <ion-label class="snooze-label">{{(lightSnooze == true) ? 'ON' : 'OFF'}}</ion-label>
           </ion-col>  
         </ion-row>
 
@@ -121,7 +121,7 @@
                 Snooze: 
               </h4>
               <ion-toggle mode='md'  [(ngModel)] = 'fanSnooze' (ngModelChange) = 'fanSnoozeSet()'  color="custgreen" class="tab2-snooze-toggle toggle-calm" ></ion-toggle>
-              <ion-label class="snooze-label">{{(fanSnooze == true) ? fanSnoozeRemaining + ' mins' : 'OFF'}}</ion-label>
+              <ion-label class="snooze-label">{{(fanSnooze == true) ? 'ON' : 'OFF'}}</ion-label>
             </ion-col>
             
         </ion-row>
@@ -176,7 +176,7 @@
                 Snooze: 
               </h4>
               <ion-toggle mode='md'  [(ngModel)] = 'pumpSnooze' (ngModelChange) = 'pumpSnoozeSet()'  color="custgreen" class="tab2-snooze-toggle toggle-calm" ></ion-toggle>
-              <ion-label class="snooze-label">{{(pumpSnooze == true) ? pumpSnoozeRemaining + ' mins' : 'OFF'}}</ion-label>
+              <ion-label class="snooze-label">{{(pumpSnooze == true) ? 'ON' : 'OFF'}}</ion-label>
             </ion-col>
 
         </ion-row>
@@ -187,7 +187,7 @@
               <ion-label>Current Device Clock:</ion-label>
             </ion-row>
             <ion-row class="ion-justify-content-center">
-              <ion-label style="font-weight: 800; font-size: 120%">{{datetimertc | date:'medium'}}</ion-label>
+              <ion-label style="font-weight: 800; font-size: 120%; padding: 2mm">{{datetimertc | date:'short'}}</ion-label>
             </ion-row>
             <ion-row class="ion-justify-content-center">
               <ion-button  fill='outline' color="custgrey" (click)="setTimeRTC()">Set Time RTC</ion-button>
