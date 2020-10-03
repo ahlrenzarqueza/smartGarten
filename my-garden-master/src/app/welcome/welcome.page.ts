@@ -6,12 +6,13 @@ import { LocationAccuracy} from '@ionic-native/location-accuracy/ngx';
 import { InAppBrowser } from '@ionic-native/in-app-browser/ngx';
 import { Storage } from '@ionic/storage'
 import { Platform } from '@ionic/angular';
-import {LoadingController} from "@ionic/angular"
+import {LoadingController, ModalController} from "@ionic/angular"
 import { AlertController } from "@ionic/angular";
 import { OpenNativeSettings } from '@ionic-native/open-native-settings/ngx';
 import { Geolocation } from '@ionic-native/geolocation/ngx';
 import { WifiWizard2 } from '@ionic-native/wifi-wizard-2/ngx';
 import { HttpClient } from '@angular/common/http';
+import { ModalListdevicesComponent } from '../modal-listdevices/modal-listdevices.component';
 import * as AWS from 'aws-sdk';
 import creds from '../../assets/env.json';
 
@@ -47,6 +48,7 @@ export class WelcomePage implements OnInit {
     private platform : Platform,
     private loadingController : LoadingController,
     private alertController : AlertController,
+    private modalController : ModalController,
     private openNativeSettings : OpenNativeSettings,
     private wifiwizard2 : WifiWizard2,
     private geolocation: Geolocation,
@@ -375,11 +377,11 @@ export class WelcomePage implements OnInit {
     alert(`Problem: ${err}`);
   }
 
-  async checkNetworks()
+  async checkLocalWifiNetworks()
   {
     // this.networkCheck = setInterval(()=>{this.enablocation();this.listNetworks();},5000);
     this.enablocation();
-    this.listNetworks();
+    this.listLocalWifiNetworks();
   }
 
   devices:any = [];
@@ -395,8 +397,17 @@ export class WelcomePage implements OnInit {
         }
       });
     } catch (error) {
-        // this.errorHandler(error);
         console.log('IoT Garden devices error: ', error);
+    }
+  }
+
+  localdevices:any = [];
+  async listLocalWifiNetworks() {
+    const me = this;
+    try {
+      let localdevices = await this.wifiwizard2.scan();
+    } catch (error) {
+        this.errorHandler(error);
     }
   }
 
@@ -414,22 +425,7 @@ export class WelcomePage implements OnInit {
     return prm;
   }
 
-  redirect() {
-    // CHANGE THE LINK BELOW TO REDIRECT USER TO COMPANY WEBSITE
-    this.iab.create('https://www.simpleplant.de/', '_self');
-  }
 
-  facebook() {
-    // CHANGE THE LINK BELOW TO YOUR FACEBOOK HOME PAGE URL
-    this.iab.create('https://m.facebook.com', '_self');
-  }
-
-
-  instagram() {
-        // CHANGE THE LINK BELOW TO YOUR INSTAGRAM HOME PAGE URL
-    this.iab.create('https://instagram.com', '_self');
-  }
-  
 onRequestSuccess(success){
     console.log("Successfully requested accuracy: "+success.message);
     this.listNetworks();
@@ -454,5 +450,21 @@ onRequestSuccess(success){
     this.diagnostic.isLocationEnabled().then((status) =>{status?this.listNetworks():this.startLocation();});
   }
  
+  async configurelocal () {
+    const modal = await this.modalController.create({
+      component: ModalListdevicesComponent,
+      cssClass: 'my-custom-class'
+    });
+    await modal.present();
+    if(this.platform.is('android'))
+    {
+      this.checkLocalWifiNetworks();
+    }
+
+    if(this.platform.is('ios'))
+    {
+      this.iosConnect()
+    }
+  }
   
 }

@@ -21,10 +21,13 @@ import { BLE } from '@ionic-native/ble/ngx';
 import { WifiWizard2 } from '@ionic-native/wifi-wizard-2/ngx';
 import { Geolocation } from '@ionic-native/geolocation/ngx';
 import { FooterbrandModule } from './footerbrand/footerbrand.module';
+import { ModalListdevicesModule } from './modal-listdevices/modal-listdevices.module';
 @NgModule({
   declarations: [AppComponent],
   entryComponents: [],
-  imports: [FooterbrandModule,BrowserModule,HttpClientModule ,IonicModule.forRoot(), AppRoutingModule,IonicStorageModule.forRoot()],
+  imports: [FooterbrandModule,
+    ModalListdevicesModule,
+    BrowserModule,HttpClientModule ,IonicModule.forRoot(), AppRoutingModule,IonicStorageModule.forRoot()],
   providers: [
     Diagnostic,
     StatusBar,

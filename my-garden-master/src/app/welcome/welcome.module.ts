@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Routes, RouterModule } from '@angular/router';
 import { FooterbrandModule } from '../footerbrand/footerbrand.module';
+import { ModalListdevicesModule } from '../modal-listdevices/modal-listdevices.module';
 // import { Diagnostic } from '@ionic-native/'
 // import { Diagnostic } from '@ionic-native/diagnostic/ngx'
 
@@ -27,6 +28,7 @@ const routes: Routes = [
     FormsModule,
     IonicModule,
     FooterbrandModule,
+    ModalListdevicesModule,
     // Diagnostic,
     // AndroidPermissions,
     // Geolocation,
