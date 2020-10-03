@@ -126,7 +126,10 @@ export class WelcomePage implements OnInit {
     this.awsiot = new AWS.Iot({apiVersion: '2015-05-28'});
     this.storage.get('gardenNameSettings').then((val)=>{
       if(val) me.gardenNameSettings = val;
-      else me.storage.set('gardenNameSettings', {});
+      else {
+        me.gardenNameSettings = {};
+        me.storage.set('gardenNameSettings', {});
+      }
     });
     await this.showLoader();
     this.awsiot.describeEndpoint({endpointType: 'iot:Data-ATS'}, function(err, data) {
@@ -387,7 +390,7 @@ export class WelcomePage implements OnInit {
       const results:any = await this.listThingsInThingGroup();
       this.devices = results.map(function (result) {
         return {
-          name:  me.gardenNameSettings[result],
+          name: me.gardenNameSettings[result],
           id: result
         }
       });
