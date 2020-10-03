@@ -27,7 +27,7 @@
 
 .link-color
 {
-    color: #5A9558;
+    color: #537D52;
 }
 .top-header
 {
@@ -104,6 +104,7 @@
 {
     font-size: 200%;
     font-weight: 800;
+    color: black;
 }
 
 
@@ -191,7 +192,12 @@ ion-col
 
 .tab2-toggle
 {
-    padding-top: 75%;
+    padding-top: 50px;
+}
+
+.tab2-snooze-toggle
+{
+    padding-top: 23px;
 }
 
 .circle
@@ -251,6 +257,10 @@ ion-col
 .center-right {
     text-align: right;
     align-items: center !important;
+}
+
+ion-select {
+    font-weight: 600;
 }
 
 ion-toast {

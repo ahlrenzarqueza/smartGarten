@@ -202,7 +202,7 @@ export class Tab2Page {
 
   async showLoader() {
     const loading = await this.loadingController.create({
-      message: 'Please Wait'
+      message: 'Warten Sie mal...'
     });
     await loading.present();
   }
@@ -742,7 +742,7 @@ export class Tab2Page {
       me.awsiotdata.getThingShadow(clockparams, function(err, data) {
         if (err) {
           console.log('AWS IOT Connection Error:', err);
-          me.presentAlert('Error in getting snooze data. Please reconnect to a device again.', 'AWS IOT Connection Error');
+          me.presentAlert('Error in getting clock data. Please reconnect to a device again.', 'AWS IOT Connection Error');
           me.router.navigateByUrl('welcome');
         }
         else {

@@ -1,0 +1,31 @@
+<ion-footer no-border style="height: 115px">
+  <ion-toolbar class = 'lower-nav' style="display: flex; height: 100%;">
+      <ion-grid>
+          <ion-row >
+              <ion-col size='2' align='center' class="center-right">
+              </ion-col>
+              <ion-col size='8' align='center'>
+                <div>
+                  <h1 style="margin-bottom: 0%; font-size: 46px; font-weight: 400;
+                  margin-top: 0;" class="footer-h2"> <i>simple</i>Plant</h1>
+                  <!-- the below a tag is for redirecting user to company website , to change website url go to redirect() function in welcome.page.ts -->
+                  <a style="font-size: 4vw;color: #5A9558;padding-right: 4.4vw;" (click)='redirect()'> www.simpleplant.de</a>
+                  <div style="width: 1vw;"></div>
+              </div>
+              </ion-col>
+              <ion-col size='2' style="display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;">
+                <!-- the below a tag is for redirecting user to social media website , to change social media url go to facebook()/instagram() function in welcome.page.ts -->
+                <ion-row>
+                    <ion-icon size="large" (click) = "instagram()" name="logo-instagram"></ion-icon>
+                </ion-row>
+                <ion-row>
+                    <ion-icon size="large" (click) = "facebook()" name="logo-facebook"></ion-icon> 
+                </ion-row>
+              </ion-col>
+          </ion-row>
+      </ion-grid>
+    </ion-toolbar>
+</ion-footer>

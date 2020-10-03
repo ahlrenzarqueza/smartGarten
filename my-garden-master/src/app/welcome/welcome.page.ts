@@ -67,7 +67,7 @@ export class WelcomePage implements OnInit {
 
   async showLoader() {
     const loading = await this.loadingController.create({
-      message: 'Please Wait'
+      message: 'Warten Sie mal...'
     });
     return await loading.present();
   }

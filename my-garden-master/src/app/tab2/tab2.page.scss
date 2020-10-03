@@ -24,7 +24,7 @@
 }
 
 .datetimepicker {
-    border: 1px solid #649b62;
+    border: 1px solid #537D52;
     border-radius: 2px;
     padding: 1mm;
 }
@@ -32,12 +32,12 @@
 // CODE FOR THE SWITCH-ON  BUTTONS AND TOGGLES COLORS
 .ion-color-custgreen {
     // Change ion-color-base and  ion-color-base-rgb to change button and toggle on colors
-    --ion-color-base: #5A9558 !important;
+    --ion-color-base: #537D52 !important;
     --ion-color-base-rgb: var(--ion-color-custgreen-rgb, 90, 149, 88) !important;
     --ion-color-contrast: white !important;
     --ion-color-contrast-rgb: 0,0,0 !important;
-    --ion-color-shade: #5A9558 !important;
-    --ion-color-tint: #5A9558 !important;
+    --ion-color-shade: #537D52 !important;
+    --ion-color-tint: #537D52 !important;
     --background: rgba(var(--ion-text-color-rgb,0,0,0),0.3);
     --handle-background: #fff;
 }
@@ -55,4 +55,5 @@
 
 .snooze-label {
     display: block;
+    padding-top: 10px;
 }

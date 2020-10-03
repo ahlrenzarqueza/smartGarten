@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Routes, RouterModule } from '@angular/router';
+import { FooterbrandModule } from '../footerbrand/footerbrand.module';
 // import { Diagnostic } from '@ionic-native/'
 // import { Diagnostic } from '@ionic-native/diagnostic/ngx'
 
@@ -25,6 +26,7 @@ const routes: Routes = [
     CommonModule,
     FormsModule,
     IonicModule,
+    FooterbrandModule,
     // Diagnostic,
     // AndroidPermissions,
     // Geolocation,

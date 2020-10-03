@@ -1,7 +1,7 @@
 
 // CUSTOME GREEN COLOR OF CONNECT BUTTON
 .ion-color-custgreen {
-    --ion-color-base: #5A9558;
+    --ion-color-base: #537D52;
     --ion-color-base-rgb: 255,255,0;
     --ion-color-contrast: white;
     --ion-color-contrast-rgb: 0,0,0;
@@ -15,6 +15,7 @@ ion-segment {
 
 ion-segment-button {
   --background-checked: #5a955885;
+  --border-color: transparent;
   --indicator-color-checked: transparent;
 }
 

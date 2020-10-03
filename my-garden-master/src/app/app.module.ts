@@ -20,10 +20,11 @@ import { Zeroconf } from "@ionic-native/zeroconf/ngx";
 import { BLE } from '@ionic-native/ble/ngx';
 import { WifiWizard2 } from '@ionic-native/wifi-wizard-2/ngx';
 import { Geolocation } from '@ionic-native/geolocation/ngx';
+import { FooterbrandModule } from './footerbrand/footerbrand.module';
 @NgModule({
   declarations: [AppComponent],
   entryComponents: [],
-  imports: [BrowserModule,HttpClientModule ,IonicModule.forRoot(), AppRoutingModule,IonicStorageModule.forRoot()],
+  imports: [FooterbrandModule,BrowserModule,HttpClientModule ,IonicModule.forRoot(), AppRoutingModule,IonicStorageModule.forRoot()],
   providers: [
     Diagnostic,
     StatusBar,
