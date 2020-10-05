@@ -182,9 +182,10 @@ export class WelcomePage implements OnInit {
       message: message,
       buttons: ['OK']
     });
-
-    await alert.present();
-    this.hideLoader();
+    
+    return await alert.present().then(() => {
+      this.hideLoader();
+    })
   }
 
   async iosConnect(successCallback)
@@ -530,7 +531,7 @@ onRequestSuccess(success){
 
     if(this.platform.is('ios'))
     {
-      this.presentAlert('To continue, you must be connected to the Garden Wi-Fi network. To change, please configure in iOS Settings.',
+      await this.presentAlert('To continue, you must be connected to the Garden Wi-Fi network. To change, please configure in iOS Settings.',
                   'Wi-Fi Garden Configuration');
       this.iosConnect(this.localConnectionSuccess);
     }
