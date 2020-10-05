@@ -204,7 +204,7 @@ export class WelcomePage implements OnInit {
       else throw new Error('Geolocation returned null');
     }
     catch (e) {
-      console.log('iOS Wi-Fi Get SSID Error: ', e);
+      alert('iOS Wi-Fi Get SSID Error: ' + e);
       this.presentAlert('Error occurred. Please make sure to turn on your Wi-Fi and connect to a Garden device network in iOS Settings.',
           'Garden Configuration Error');
       // if(confirm('Error occurred. Please make sure to turn on your Wi-Fi and connect to a Garden Wi-Fi network in iOS Settings.'))
