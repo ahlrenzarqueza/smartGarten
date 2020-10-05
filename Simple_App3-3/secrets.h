@@ -3,8 +3,7 @@
 #define SECRET
 #define THINGNAME "Test-Arduino-Garden"
 
-const char WIFI_SSID[] = "WIFI_SSID_Here";
-const char WIFI_PASSWORD[] = "WIFI_Password_Here";
+const char WIFI_PASSWORD[] = "12345678";
 const char AWS_IOT_ENDPOINT[] = "a35dihqqydbbpb-ats.iot.ap-southeast-1.amazonaws.com";
 
 // Amazon Root CA 1

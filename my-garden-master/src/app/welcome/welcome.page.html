@@ -75,7 +75,7 @@
 
     </ion-row>
     
-    <ion-row align='center'>
+    <ion-row align='center' style="height:10%">
         <ion-col size='3'></ion-col>
         <ion-col size='6'>
             <ion-button style="width: 100%; height: 15mm;" color='custgreen' (click) = "connect()">Verbinden</ion-button>
@@ -83,7 +83,11 @@
         <ion-col size='3'></ion-col>
     </ion-row>
     <ion-row class='ion-justify-content-end' style="height: 10%; align-content: flex-end; padding: 2mm 4mm;">
-      <a style="width: auto; height: auto;" class="configurelocalbtn" (click) = "configurelocal()">Configure local devices...</a>
+      <!-- <a style="width: auto; height: auto;" class="configurelocalbtn" (click) = "configurelocal($event)">Configure local devices...</a> -->
+      <ion-label  class="device-select-header" style="height: 6mm; font-weight: 800" (click) = "!osCheck && configurelocal($event)">Configure local device(s)...</ion-label>
+      <ion-select *ngIf="osCheck" [interfaceOptions]="customAlertOptions" interface="alert" [(ngModel)] = 'selected_local_device' (click) = "configurelocal($event)" (ionChange)='onLocalDeviceChange($event)' style="padding: 0">
+        <ion-select-option [value] = 'device' *ngFor='let device of localdevices'>{{device.SSID ? device.SSID : device.BSSID}}</ion-select-option>
+      </ion-select>
     </ion-row>
   </ion-grid>
 </ion-content>

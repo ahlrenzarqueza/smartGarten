@@ -6,7 +6,7 @@ import { LocationAccuracy} from '@ionic-native/location-accuracy/ngx';
 import { InAppBrowser } from '@ionic-native/in-app-browser/ngx';
 import { Storage } from '@ionic/storage'
 import { Platform } from '@ionic/angular';
-import {LoadingController, ModalController} from "@ionic/angular"
+import {LoadingController, PopoverController} from "@ionic/angular"
 import { AlertController } from "@ionic/angular";
 import { OpenNativeSettings } from '@ionic-native/open-native-settings/ngx';
 import { Geolocation } from '@ionic-native/geolocation/ngx';
@@ -33,12 +33,19 @@ export class WelcomePage implements OnInit {
   selected_bt = null;
   selected_bt_id = null;
   selected_bt_name = null;
+  selected_local_device = null;
   networkCheck:any;
   osCheck:any;
   loaderToShow:any;
   btdevice:any;
   connectionMode:'wifi'|'bluetooth';
   gardenNameSettings:any;
+  customAlertOptions: any = {
+    header: 'Select Local Device to configure',
+    subHeader: '',
+    message: '',
+    translucent: true
+  };
 
   constructor(private router: Router,
     private diagnostic : Diagnostic,
@@ -48,7 +55,7 @@ export class WelcomePage implements OnInit {
     private platform : Platform,
     private loadingController : LoadingController,
     private alertController : AlertController,
-    private modalController : ModalController,
+    private popoverController : PopoverController,
     private openNativeSettings : OpenNativeSettings,
     private wifiwizard2 : WifiWizard2,
     private geolocation: Geolocation,
@@ -180,14 +187,15 @@ export class WelcomePage implements OnInit {
     this.hideLoader();
   }
 
-  async iosConnect()
+  async iosConnect(successCallback)
   {
     // this.router.navigateByUrl('/tabs');
     try {
       var pos = await this.geolocation.getCurrentPosition();
       if (pos) {
         this.wifiwizard2.getConnectedSSID().then( ssId => {
-          this.selected_wifi = ssId; 
+          this.selected_local_device = ssId; 
+          if(successCallback) successCallback();
         })
         .catch( err => {
           throw err;
@@ -197,29 +205,31 @@ export class WelcomePage implements OnInit {
     }
     catch (e) {
       console.log('iOS Wi-Fi Get SSID Error: ', e);
-      if(confirm('To continue, please turn on your Wi-Fi and connect to Garden access point in Settings.'))
-      {
-        this.openNativeSettings.open('wifi')
-        .then( val => {
-          console.log("Successfully opened native settings.");
-        })
-        .catch( err => {
-          console.log("Failed to open native settings.", err);
-        })
-      }
+      this.presentAlert('Error occurred. Please make sure to turn on your Wi-Fi and connect to a Garden device network in iOS Settings.',
+          'Garden Configuration Error');
+      // if(confirm('Error occurred. Please make sure to turn on your Wi-Fi and connect to a Garden Wi-Fi network in iOS Settings.'))
+      // {
+      this.openNativeSettings.open('wifi')
+      .then( val => {
+        console.log("Successfully opened native settings.");
+      })
+      .catch( err => {
+        console.log("Failed to open native settings.", err);
+      })
+      // }
     }   
   }
 
-  async iosCheckNetwork()
-  {
-    this.networkCheck = setInterval(()=>{this.iosConnect();},3000);
-    var isNotInitStart = await this.storage.get('iOSNotInitStart');
-    if(!isNotInitStart) {
-      await this.storage.set('iOSNotInitStart', true);
-      this.presentAlert('To select Garden via Wi-Fi, selection will depend on current connected Wi-Fi. To change, please configure in iOS Settings.',
-                  'Wi-Fi Garden Selection');
-    }
-  }
+  // async iosCheckNetwork()
+  // {
+  //   this.networkCheck = setInterval(()=>{this.iosConnect();},3000);
+  //   var isNotInitStart = await this.storage.get('iOSNotInitStart');
+  //   if(!isNotInitStart) {
+  //     await this.storage.set('iOSNotInitStart', true);
+  //     this.presentAlert('To select Garden via Wi-Fi, selection will depend on current connected Wi-Fi. To change, please configure in iOS Settings.',
+  //                 'Wi-Fi Garden Selection');
+  //   }
+  // }
 
   onConnModeChange(event)
   {
@@ -239,6 +249,51 @@ export class WelcomePage implements OnInit {
     if(!event.detail.value) return;
     this.selected_bt_id = event.detail.value.id;
     this.selected_bt_name = event.detail.value.name;
+  }
+
+  async onLocalDeviceChange(event) {
+    if(!event.detail.value) return;
+    if(this.platform.is('android') && this.connectionMode == 'wifi') {
+      const alert = await this.alertController.create({
+        header: 'Password!',
+        subHeader: 'Please provide password for '+this.selected_local_device +'. Or just press OK if this device is open (public Wi-Fi)',
+        inputs: [
+          {
+            name: 'password',
+            type: 'password',
+            placeholder: 'Password'
+          }
+        ],
+        buttons: [
+          {
+            text: 'Cancel',
+            role: 'cancel',
+            cssClass: 'secondary',
+            handler: () => {
+              console.log('Confirm Cancel');
+            }
+          }, {
+            text: 'OK',
+            handler: (data) => {
+              this.showLoader();
+              let pass = data.password;
+              // console.log(pass)
+              // console.log(this.selected_wifi)
+              if(pass.length == 0)
+              {
+                this.wifiwizard2.connect(this.selected_local_device,true).then(()=>{this.localConnectionSuccess();}).catch((err)=>{console.log(err);this.presentAlert("Couldn't connect to the device. Check whether wifi is enabled!");});
+              } else{
+                this.wifiwizard2.connect(this.selected_local_device,true,pass,"WPA").then(()=>{this.localConnectionSuccess();}).catch((err)=>{console.log(err);this.presentAlert("Couldn't connect to the device. Check whether wifi is enabled or password provided is correct!");});
+              }
+              // console.log(data.password)
+              // this.presentAlert(data)
+              // console.log('Confirm Ok');
+            }
+          }
+        ]
+      });
+      await alert.present();
+    }
   }
   
   connect()
@@ -372,6 +427,21 @@ export class WelcomePage implements OnInit {
     // });
     this.router.navigateByUrl('/tabs/tab1');    
   }
+
+  localConnectionSuccess = async function () {
+    var tab = this.iab.create('http://10.0.1.1/wifi','_slef','location=no,toolbar=no');
+    tab.on('loadstop').subscribe(e=>{
+      if(e.url.indexOf('wifisave') != -1)
+      {
+        tab.close();
+        this.storage.set('wifiSetFlag','1');
+        this.presentAlert("Garden device successfully set-up Wi-Fi connection. You can now connect to the device via Cloud IoT mode",
+                          "Setup successful");
+        this.selected_local_device = null;
+        // this.router.navigateByUrl('/tabs');
+      }
+    });
+  }
   
   errorHandler(err: any){
     alert(`Problem: ${err}`);
@@ -401,11 +471,13 @@ export class WelcomePage implements OnInit {
     }
   }
 
-  localdevices:any = [];
+  localdevices:any = [{
+    SSID: "SampleWifi"
+  }];
   async listLocalWifiNetworks() {
     const me = this;
     try {
-      let localdevices = await this.wifiwizard2.scan();
+      this.localdevices = await this.wifiwizard2.scan();
     } catch (error) {
         this.errorHandler(error);
     }
@@ -450,12 +522,7 @@ onRequestSuccess(success){
     this.diagnostic.isLocationEnabled().then((status) =>{status?this.listNetworks():this.startLocation();});
   }
  
-  async configurelocal () {
-    const modal = await this.modalController.create({
-      component: ModalListdevicesComponent,
-      cssClass: 'my-custom-class'
-    });
-    await modal.present();
+  async configurelocal (evt) {
     if(this.platform.is('android'))
     {
       this.checkLocalWifiNetworks();
@@ -463,7 +530,9 @@ onRequestSuccess(success){
 
     if(this.platform.is('ios'))
     {
-      this.iosConnect()
+      this.presentAlert('To continue, you must be connected to the Garden Wi-Fi network. To change, please configure in iOS Settings.',
+                  'Wi-Fi Garden Configuration');
+      this.iosConnect(this.localConnectionSuccess);
     }
   }
   

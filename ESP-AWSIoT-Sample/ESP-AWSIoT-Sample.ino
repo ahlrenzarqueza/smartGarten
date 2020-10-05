@@ -5,10 +5,10 @@
 #include <WiFi.h>
 
 #define AWS_IOT_PUBLISH_TOPIC   "$aws/things/Test-Arduino-Garden/shadow/name/Measurements/update"
-#define AWS_IOT_SUBSCRIBE_TOPIC "$aws/things/Test-Arduino-Garden/shadow/name/Measurements/update/accepted"
+#define AWS_IOT_SUBSCRIBE_TOPIC "$aws/things/Test-Arduino-Garden/shadow/name/Settings/update/delta"
 
 WiFiClientSecure net = WiFiClientSecure();
-MQTTClient client = MQTTClient(256);
+MQTTClient client = MQTTClient(512);
 unsigned long int AWSpublish_Timer = 0;
 int AWSPublish_Interval = 3000;
 
@@ -134,17 +134,71 @@ void sendJsonToAWS()
 //  reportedObj["sunset-min": 0
 
   char jsonBuffer[512];
-  serializeJson(jsonDoc, jsonBuffer); 
-  // Publish the message to AWS
+  serializeJson(jsonDoc, jsonBuffer);
   client.publish(AWS_IOT_PUBLISH_TOPIC, jsonBuffer);
 }
 
 void messageHandler(String &topic, String &payload) {
-  Serial.println("incoming: " + topic + " - " + payload);
+  Serial.println("Incoming Message: " + topic + " - " + payload);
+    StaticJsonDocument<512> doc;
+    deserializeJson(doc, payload);
+    
+    bool fan1Doc = doc["state"]["fan1-enabled"];
+    bool fan2Doc = doc["state"]["fan2-enabled"];
+    const String pumpDoc = doc["state"]["pump-enabled"];
+    const String light1Doc = doc["state"]["light1-enabled"];
+    const String light2Doc = doc["state"]["light2-enabled"];
+    const String light3Doc = doc["state"]["light3-enabled"];
+    
+    int sun_rise_hourDoc = doc["state"]["sunrise-hr"];
+    int sun_rise_minDoc = doc["state"]["sunrise-min"];
+    const String sun_set_hourDoc = doc["state"]["sunset-hr"];
+    const String sun_set_minDoc = doc["state"]["sunset-min"];
 
-  //  StaticJsonDocument<200> doc;
-  //  deserializeJson(doc, payload);
-  //  const char* message = doc["message"];
+    const String fansun_rise_hourDoc = doc["state"]["fansunrise-hr"];
+    const String fansun_rise_minDoc = doc["state"]["fansunrise-min"];
+    const String fansun_set_hourDoc = doc["state"]["fansunset-hr"];
+    const String fansun_set_minDoc = doc["state"]["fansunset-min"];
+
+    const String pumpsun_rise_hourDoc = doc["state"]["pumpsunrise-hr"];
+    const String pumpsun_rise_minDoc = doc["state"]["pumpsunrise-min"];
+    const String pumpsun_set_hourDoc = doc["state"]["pumpsunset-hr"];
+    const String pumpsun_set_minDoc = doc["state"]["pumpsunset-min"];
+
+    const String fanOnTimer = doc["state"]["desired"]["fanOnTimer"];
+    const String pumpOnTimer = doc["state"]["desired"]["pumpOnTimer"];
+
+    const String lightSnoozeRemaining = doc["state"]["desired"]["lightSnoozeRemaining"];
+    const String fanSnoozeRemaining = doc["state"]["desired"]["fanSnoozeRemaining"];
+    const String pumpSnoozeRemaining = doc["state"]["desired"]["pumpSnoozeRemaining"];
+
+    const String dimmerPower = doc["state"]["desired"]["lightIntensity"];
+
+
+      Serial.print("fan1Doc: ");
+      Serial.println(fan1Doc ? "TRUE" : "FALSE");
+
+
+      Serial.println("fan2Doc: ");
+      Serial.println(fan2Doc ? "TRUE" : "FALSE");
+
+    if(sun_rise_hourDoc != NULL) {
+      Serial.print("sun_rise_hourDoc: ");
+      Serial.println(sun_rise_hourDoc);
+//      const int sunriseint = sun_rise_hourDoc.toInt() + 100;
+//      Serial.println("parsed: " + sunriseint);
+    }
+    if(sun_rise_minDoc != NULL) {
+      Serial.print("sun_rise_minDoc: ");
+      Serial.println(sun_rise_minDoc);
+//      const int sunrisemin = sun_rise_minDoc.toInt() + 100;
+//      Serial.println("parsed: " + sunrisemin);
+    }
+    
+    String test_str = "12";
+    int test_int = test_str.toInt() + 100;
+    Serial.println("test parsed: ");
+    Serial.println(test_int);
 }
 
 void loop() {
@@ -154,5 +208,5 @@ void loop() {
     sendJsonToAWS();
     AWSpublish_Timer = millis();
   }
-  delay(1000);
+  delay(10);
 }
