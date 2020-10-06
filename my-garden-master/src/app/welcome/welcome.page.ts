@@ -196,7 +196,7 @@ export class WelcomePage implements OnInit {
       console.log('Connection to Wifi log, Position: ', pos);
       if (pos) {
         this.wifiwizard2.getConnectedSSID().then( ssId => {
-          alert('Connected to Wi-Fi: ' + ssId);
+          this.presentAlert('Connected to Wi-Fi: ' + ssId);
           this.selected_local_device = ssId; 
           if(successCallback) successCallback();
         })
@@ -207,8 +207,8 @@ export class WelcomePage implements OnInit {
       else throw new Error('Geolocation returned null');
     }
     catch (e) {
-      alert('iOS Wi-Fi Get SSID Error: ' + e);
-      this.presentAlert('Error occurred. Please make sure to turn on your Wi-Fi and connect to a Garden device network in iOS Settings.',
+      await this.presentAlert('iOS Wi-Fi Get SSID Error: ' + e);
+      await this.presentAlert('Error occurred. Please make sure to turn on your Wi-Fi and connect to a Garden device network in iOS Settings.',
           'Garden Configuration Error');
       // if(confirm('Error occurred. Please make sure to turn on your Wi-Fi and connect to a Garden Wi-Fi network in iOS Settings.'))
       // {
