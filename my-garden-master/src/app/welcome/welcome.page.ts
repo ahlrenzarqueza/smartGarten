@@ -164,7 +164,7 @@ export class WelcomePage implements OnInit {
         me.hideLoader();
       }
 
-      // me.localConnectionSuccess();
+      me.localConnectionSuccess();
     });
   }
 
