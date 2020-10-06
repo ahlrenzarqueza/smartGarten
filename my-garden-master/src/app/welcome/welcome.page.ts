@@ -164,7 +164,7 @@ export class WelcomePage implements OnInit {
         me.hideLoader();
       }
 
-      me.localConnectionSuccess();
+      // me.localConnectionSuccess();
     });
   }
 
@@ -193,7 +193,6 @@ export class WelcomePage implements OnInit {
   async iosConnect(successCallback)
   {
     console.log('iOS Connecting to Wi-Fi with callback:', successCallback);
-    if(successCallback) successCallback();
     try {
       var pos = await this.geolocation.getCurrentPosition();
       console.log('Connection to Wi-Fi log, Position: ', pos);
@@ -202,7 +201,7 @@ export class WelcomePage implements OnInit {
           console.log('Connected to Wi-Fi SSID', ssId);
           this.presentAlert('Connected to Wi-Fi: ' + ssId);
           this.selected_local_device = ssId; 
-          if(successCallback) successCallback();
+          if(successCallback) successCallback.call(this);
         })
         .catch( err => {
           throw err;
@@ -440,15 +439,15 @@ export class WelcomePage implements OnInit {
     var tab = this.iab.create('http://10.0.1.1/wifi','_self','location=no,toolbar=no');
     tab.on('loadstop').subscribe(e=>{
       console.log('A specific page was loaded', e.url);
-      // if(e.url.indexOf('wifisave') != -1)
-      // {
-      //   tab.close();
-      //   this.storage.set('wifiSetFlag','1');
-      //   this.presentAlert("Garden device successfully set-up Wi-Fi connection. You can now connect to the device via Cloud IoT mode",
-      //                     "Setup successful");
-      //   this.selected_local_device = null;
-      //   // this.router.navigateByUrl('/tabs');
-      // }
+      if(e.url.indexOf('wifisave') != -1)
+      {
+        tab.close();
+        this.storage.set('wifiSetFlag','1');
+        this.presentAlert("Garden device successfully set-up Wi-Fi connection. You can now connect to the device via Cloud IoT mode",
+                          "Setup successful");
+        this.selected_local_device = null;
+        // this.router.navigateByUrl('/tabs');
+      }
     });
     tab.show();
   }
