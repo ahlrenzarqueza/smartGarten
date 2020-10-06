@@ -185,10 +185,10 @@ export class Tab1Page {
         thingName: this.activeDevice, /* required */
         shadowName: 'Measurements'
       };
-      me.awsiotdata.getThingShadow(params, function(err, data) {
+      me.awsiotdata.getThingShadow(params, async function(err, data) {
         if (err) {
           console.log('AWS IOT Connection Error:', err);
-          this.presentAlert('Error in getting measurements. Please reconnect to a device again.', 'AWS IOT Connection Error');
+          await this.presentAlert('Error in getting measurements. Please reconnect to a device again.', 'AWS IOT Connection Error');
           this.router.navigateByUrl('welcome');
         }
         else {
@@ -243,7 +243,8 @@ export class Tab1Page {
           });
         }, (error) => {
           console.log('BT Read Notification Error: ', error);
-          });
+        });
+        me.bt_notif_initialized = true;
       }
       
       const writedata = me.stringToBytes('p');
@@ -257,7 +258,7 @@ export class Tab1Page {
 
   loopResult;
   async loopGetResults() {
-    const interval = this.activeConnectionMode == 'wifi' ? 5000 : 7000;
+    const interval = this.activeConnectionMode == 'wifi' ? 5000 : 10000;
     this.loopResult = setInterval(() => { this.getResults(); }, interval);
   }
 
@@ -340,6 +341,7 @@ export class Tab1Page {
     });
 
     await alert.present();
+    return alert.onDidDismiss();
   }
   
   async presentRenameGardenPrompt() {

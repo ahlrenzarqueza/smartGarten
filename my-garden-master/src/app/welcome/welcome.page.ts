@@ -141,10 +141,10 @@ export class WelcomePage implements OnInit {
       }
     });
     await this.showLoader();
-    this.awsiot.describeEndpoint({endpointType: 'iot:Data-ATS'}, function(err, data) {
+    this.awsiot.describeEndpoint({endpointType: 'iot:Data-ATS'}, async function(err, data) {
       if (err) {
         me.hideLoader();
-        me.presentAlert(err, 'Please connect to a working internet connection.');
+        await me.presentAlert(err, 'Error occurred in initializing IoT Cloud. Please check if you have a valid internet connection.');
         me.openNativeSettings.open('wifi')
         .then( val => {
           console.log("Successfully opened native settings.");
@@ -185,9 +185,10 @@ export class WelcomePage implements OnInit {
       buttons: ['OK']
     });
     
-    return await alert.present().then(() => {
+    await alert.present().then(() => {
       this.hideLoader();
-    })
+    });
+    return alert.onDidDismiss();
   }
 
   async iosConnect(successCallback)
@@ -199,7 +200,6 @@ export class WelcomePage implements OnInit {
       if (pos) {
         this.wifiwizard2.getConnectedSSID().then( ssId => {
           console.log('Connected to Wi-Fi SSID', ssId);
-          this.presentAlert('Connected to Wi-Fi: ' + ssId);
           this.selected_local_device = ssId; 
           if(successCallback) successCallback.call(this);
         })
@@ -210,7 +210,7 @@ export class WelcomePage implements OnInit {
       else throw new Error('Geolocation returned null');
     }
     catch (e) {
-      await this.presentAlert('iOS Wi-Fi Get SSID Error: ' + e);
+      console.log('iOS Wi-Fi Get SSID Error: ' + e);
       await this.presentAlert('Error occurred. Please make sure to turn on your Wi-Fi and connect to a Garden device network in iOS Settings.',
           'Garden Configuration Error');
       // if(confirm('Error occurred. Please make sure to turn on your Wi-Fi and connect to a Garden Wi-Fi network in iOS Settings.'))
@@ -287,9 +287,9 @@ export class WelcomePage implements OnInit {
               // console.log(this.selected_wifi)
               if(pass.length == 0)
               {
-                this.wifiwizard2.connect(this.selected_local_device,true).then(()=>{this.localConnectionSuccess();}).catch((err)=>{console.log(err);this.presentAlert("Couldn't connect to the device. Check whether wifi is enabled!");});
+                this.wifiwizard2.connect(this.selected_local_device,true).then(()=>{this.localConnectionSuccess();}).catch((err)=>{console.log(err);this.presentAlert("Couldn't connect to the device. Check whether Wi-Fi is enabled!");});
               } else{
-                this.wifiwizard2.connect(this.selected_local_device,true,pass,"WPA").then(()=>{this.localConnectionSuccess();}).catch((err)=>{console.log(err);this.presentAlert("Couldn't connect to the device. Check whether wifi is enabled or password provided is correct!");});
+                this.wifiwizard2.connect(this.selected_local_device,true,pass,"WPA").then(()=>{this.localConnectionSuccess();}).catch((err)=>{console.log(err);this.presentAlert("Couldn't connect to the device. Check whether Wi-Fi is enabled or password provided is correct!");});
               }
               // console.log(data.password)
               // this.presentAlert(data)

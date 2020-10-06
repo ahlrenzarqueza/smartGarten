@@ -112,7 +112,7 @@ export class Tab2Page {
     this.activeDevice = await this.storage.get('globalConnectedDevice');
     this.bt_peripheral = await this.storage.get('globalBtPeripheral');
 
-    // if(this.activeConnectionMode == 'wifi') {
+    if(this.activeConnectionMode == 'wifi') {
       this.awsiotEndpoint = await this.storage.get('awsiotEndpoint');
       this.awsiotdata = new AWS.IotData({
         endpoint: this.awsiotEndpoint,
@@ -183,7 +183,10 @@ export class Tab2Page {
         me.clockCheckInterval();
       
       });
-    // }
+    }
+    else {
+      
+    }
   }
 
   ionViewWillEnter() {
