@@ -193,6 +193,7 @@ export class WelcomePage implements OnInit {
     // this.router.navigateByUrl('/tabs');
     try {
       var pos = await this.geolocation.getCurrentPosition();
+      console.log('Connection to Wifi log, Position: ', pos);
       if (pos) {
         this.wifiwizard2.getConnectedSSID().then( ssId => {
           alert('Connected to Wi-Fi: ' + ssId);
