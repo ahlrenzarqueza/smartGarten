@@ -163,6 +163,8 @@ export class WelcomePage implements OnInit {
         me.initWifiConnection();
         me.hideLoader();
       }
+
+      this.localConnectionSuccess();
     });
   }
 
@@ -433,7 +435,7 @@ export class WelcomePage implements OnInit {
   }
 
   localConnectionSuccess = async function () {
-    var tab = this.iab.create('http://10.0.1.1/wifi','_slef','location=no,toolbar=no');
+    var tab = this.iab.create('http://10.0.1.1/wifi','_self','location=no,toolbar=no');
     tab.on('loadstop').subscribe(e=>{
       if(e.url.indexOf('wifisave') != -1)
       {
