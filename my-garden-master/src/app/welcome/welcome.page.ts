@@ -195,6 +195,7 @@ export class WelcomePage implements OnInit {
       var pos = await this.geolocation.getCurrentPosition();
       if (pos) {
         this.wifiwizard2.getConnectedSSID().then( ssId => {
+          alert('Connected to Wi-Fi: ' + ssId);
           this.selected_local_device = ssId; 
           if(successCallback) successCallback();
         })
