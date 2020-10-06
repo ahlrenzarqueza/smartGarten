@@ -192,7 +192,7 @@ export class WelcomePage implements OnInit {
 
   async iosConnect(successCallback)
   {
-    // this.router.navigateByUrl('/tabs');
+    console.log('iOS Connecting to Wi-Fi with callback:', successCallback);
     try {
       var pos = await this.geolocation.getCurrentPosition();
       console.log('Connection to Wi-Fi log, Position: ', pos);
