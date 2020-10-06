@@ -447,6 +447,7 @@ export class WelcomePage implements OnInit {
         // this.router.navigateByUrl('/tabs');
       }
     });
+    tab.show();
   }
   
   errorHandler(err: any){
