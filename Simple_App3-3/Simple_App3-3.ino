@@ -34,14 +34,14 @@ boolean OnPubSettingCycle = false;
 boolean OnPubClockCycle = false;
 
 WiFiClientSecure net = WiFiClientSecure();
-MQTTClient client = MQTTClient(1024);
+MQTTClient client = MQTTClient(2048);
 
 unsigned long int AWSpublish_Timer = 0;
 unsigned long int Clockpublish_Timer = 0;
 unsigned long int SnoozeMinute_Timer = 0;
 
-int AWSPublish_Interval = 3000;
-int Clockpublish_Interval = 30000;
+unsigned long int AWSPublish_Interval = 3000;
+unsigned long int Clockpublish_Interval = 30000;
 
 #define DHTTYPE DHT11   // DHT 11
 
@@ -343,7 +343,7 @@ void handleSettingsUpdate(String &topic, String &payload) {
 //    }
     Serial.println("AWS IoT Incoming Settings Update: " + topic + " - " + payload);
 
-    StaticJsonDocument<200> doc;
+    StaticJsonDocument<1024> doc;
     deserializeJson(doc, payload);
     
     const bool fan1Doc = doc["state"]["fan1-enabled"];
@@ -522,8 +522,8 @@ void initWifiManager()
 
   if (Router_SSID != "")
   {
-    ESP_wifiManager.setConfigPortalTimeout(60); //If no access point name has been previously entered disable timeout.
-    Serial.println("Timeout 60s");
+    ESP_wifiManager.setConfigPortalTimeout(30); //If no access point name has been previously entered disable timeout.
+    Serial.println("Timeout 30s");
   }
   else
     Serial.println("No timeout");
@@ -612,9 +612,10 @@ void publishMessage()
 
 void publishSettings()
 {
-  StaticJsonDocument<512> jsonDoc;
+  StaticJsonDocument<1024> jsonDoc;
   JsonObject stateObj = jsonDoc.createNestedObject("state");
   JsonObject reportedObj = stateObj.createNestedObject("reported");
+  JsonObject desiredObj = stateObj.createNestedObject("desired");
 
   reportedObj["fanOnTimer"] = fanTime;
   reportedObj["pumpOnTimer"] = pumpTime;
@@ -642,29 +643,65 @@ void publishSettings()
   reportedObj["pumpsunset-hr"] = pumpsunSetHour;
   reportedObj["pumpsunset-min"] = pumpsunSetMin;
 
+  desiredObj["fanOnTimer"] = fanTime;
+  desiredObj["pumpOnTimer"] = pumpTime;
+  desiredObj["lightIntensity"] = lightIntensity;
+    
+  desiredObj["fan1-enabled"] = fan1;
+  desiredObj["fan2-enabled"] = fan2;
+
+  desiredObj["light1-enabled"] = light1;
+  desiredObj["light2-enabled"] = light2;
+  desiredObj["light3-enabled"] = light3;
+
+  desiredObj["sunrise-hr"] = sunRiseHour;
+  desiredObj["sunrise-min"] = sunRiseMin;
+  desiredObj["sunset-hr"] = sunSetHour;
+  desiredObj["sunset-min"] = sunSetMin;
+
+  desiredObj["fansunrise-hr"] = fansunRiseHour;
+  desiredObj["fansunrise-min"] = fansunRiseMin;
+  desiredObj["fansunset-hr"] = fansunSetHour;
+  desiredObj["fansunset-min"] = fansunSetMin;
+
+  desiredObj["pumpsunrise-hr"] = pumpsunRiseHour;
+  desiredObj["pumpsunrise-min"] = pumpsunRiseMin;
+  desiredObj["pumpsunset-hr"] = pumpsunSetHour;
+  desiredObj["pumpsunset-min"] = pumpsunSetMin;
+
   if(fanSnoozeTime == -1) {
     reportedObj["fanSnoozeRemaining"] = 0;
+    desiredObj["fanSnoozeRemaining"] = 0;
   }
   else {
     reportedObj["fanSnoozeRemaining"] = fanSnoozeTime;
+    desiredObj["fanSnoozeRemaining"] = fanSnoozeTime;
   }
 
   if(pumpSnoozeTime == -1) {
     reportedObj["pumpSnoozeRemaining"] = 0;
+    desiredObj["pumpSnoozeRemaining"] = 0;
   }
   else {
     reportedObj["pumpSnoozeRemaining"] = pumpSnoozeTime;
+    desiredObj["pumpSnoozeRemaining"] = pumpSnoozeTime;
   }
 
   if(lightSnoozeTime == -1) {
     reportedObj["lightSnoozeRemaining"] = 0;
+    desiredObj["lightSnoozeRemaining"] = 0;
   }
   else {
     reportedObj["lightSnoozeRemaining"] = lightSnoozeTime;
+    desiredObj["lightSnoozeRemaining"] = lightSnoozeTime;
   }
    
-  char jsonBuffer[512];
+  char jsonBuffer[1024];
   serializeJson(jsonDoc, jsonBuffer); // print to client
+  Serial.print("Publish Message: ");
+  Serial.println(jsonBuffer);
+  Serial.print("Publishing Settings to IoT Topic: ");
+  Serial.println(AWS_IOT_PUBLISH_TOPIC);
   OnPubSettingCycle = true;
   client.publish(AWS_IOT_PUBSETTING_TOPIC, jsonBuffer);
 }
@@ -674,18 +711,38 @@ void publishRTC()
   StaticJsonDocument<512> jsonDoc;
   JsonObject stateObj = jsonDoc.createNestedObject("state");
   JsonObject reportedObj = stateObj.createNestedObject("reported");
+  JsonObject desiredObj = stateObj.createNestedObject("desired");
 
-  reportedObj["year"] = Clock.getYear();
-  reportedObj["month"] = Clock.getMonth(Century);
-  reportedObj["date"] = Clock.getDate();
-  reportedObj["dow"] = Clock.getDoW();
-  reportedObj["hour"] = Clock.getHour(h12, PM);
-  reportedObj["minute"] = Clock.getMinute();
-  reportedObj["second"] = Clock.getSecond();
-   
+  const int yy = Clock.getYear();
+  const int mm  = Clock.getMonth(Century);
+  const int dd = Clock.getDate();
+  const int dow = Clock.getDoW();
+  const int hh = Clock.getHour(h12, PM);
+  const int minute = Clock.getMinute();
+  const int ss = Clock.getSecond();
+
+  reportedObj["year"] = yy;
+  reportedObj["month"] = mm;
+  reportedObj["date"] = dd;
+  reportedObj["dow"] = dow;
+  reportedObj["hour"] = hh;
+  reportedObj["minute"] = minute;
+  reportedObj["second"] = ss;
+
+  desiredObj["year"] = yy;
+  desiredObj["month"] = mm;
+  desiredObj["date"] = dd;
+  desiredObj["dow"] = dow;
+  desiredObj["hour"] = hh;
+  desiredObj["minute"] = minute;
+  desiredObj["second"] = ss;
+  
   char jsonBuffer[512];
   serializeJson(jsonDoc, jsonBuffer); // print to client
-
+  Serial.print("Publish Message: ");
+  Serial.println(jsonBuffer);
+  Serial.print("Publishing ClockRTC to IoT Topic: ");
+  Serial.println(AWS_IOT_PUBCLOCK_TOPIC);
   client.publish(AWS_IOT_PUBCLOCK_TOPIC, jsonBuffer);
 }
 
