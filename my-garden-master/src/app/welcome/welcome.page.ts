@@ -437,15 +437,15 @@ export class WelcomePage implements OnInit {
   localConnectionSuccess = async function () {
     var tab = this.iab.create('http://10.0.1.1/wifi','_self','location=no,toolbar=no');
     tab.on('loadstop').subscribe(e=>{
-      if(e.url.indexOf('wifisave') != -1)
-      {
-        tab.close();
-        this.storage.set('wifiSetFlag','1');
-        this.presentAlert("Garden device successfully set-up Wi-Fi connection. You can now connect to the device via Cloud IoT mode",
-                          "Setup successful");
-        this.selected_local_device = null;
-        // this.router.navigateByUrl('/tabs');
-      }
+      // if(e.url.indexOf('wifisave') != -1)
+      // {
+      //   tab.close();
+      //   this.storage.set('wifiSetFlag','1');
+      //   this.presentAlert("Garden device successfully set-up Wi-Fi connection. You can now connect to the device via Cloud IoT mode",
+      //                     "Setup successful");
+      //   this.selected_local_device = null;
+      //   // this.router.navigateByUrl('/tabs');
+      // }
     });
     tab.show();
   }
