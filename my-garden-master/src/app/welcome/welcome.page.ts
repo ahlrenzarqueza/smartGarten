@@ -435,8 +435,10 @@ export class WelcomePage implements OnInit {
   }
 
   localConnectionSuccess = async function () {
+    console.log('Opening IAB tab');
     var tab = this.iab.create('http://10.0.1.1/wifi','_self','location=no,toolbar=no');
     tab.on('loadstop').subscribe(e=>{
+      console.log('A specific page was loaded', e.url);
       // if(e.url.indexOf('wifisave') != -1)
       // {
       //   tab.close();
