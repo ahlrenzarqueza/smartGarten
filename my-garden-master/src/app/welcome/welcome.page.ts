@@ -164,7 +164,7 @@ export class WelcomePage implements OnInit {
         me.hideLoader();
       }
 
-      this.localConnectionSuccess();
+      // me.localConnectionSuccess();
     });
   }
 
@@ -434,8 +434,8 @@ export class WelcomePage implements OnInit {
     this.router.navigateByUrl('/tabs/tab1');    
   }
 
-  localConnectionSuccess = async function () {
-    console.log('Opening IAB tab');
+  localConnectionSuccess = async () => {
+    console.log('Opening IAB tab with local device: ', this.selected_local_device);
     var tab = this.iab.create('http://10.0.1.1/wifi','_self','location=no,toolbar=no');
     tab.on('loadstop').subscribe(e=>{
       console.log('A specific page was loaded', e.url);
