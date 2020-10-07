@@ -380,24 +380,24 @@ void handleSettingsUpdate(String &topic, String &payload) {
     if(fanOnTimer != NULL) {
       fanTime = fanOnTimer;
     }
-    if(fanOnTimer != NULL) {
+    if(pumpOnTimer != NULL) {
       pumpTime = pumpOnTimer;
     }
 
     if(lightSnooze != NULL) {
-      lightSnoozeTime = lightSnooze == "true" ? 30 : 0;
+      lightSnoozeTime = lightSnooze == "true" ? 30 : -1;
     } else {
-      lightSnoozeTime = 0;
+      lightSnoozeTime = -1;
     }
     if(fanSnooze != NULL) {
-      fanSnoozeTime = fanSnooze == "true" ? 30 : 0;
+      fanSnoozeTime = fanSnooze == "true" ? 30 : -1;
     } else {
-      fanSnoozeTime = 0;
+      fanSnoozeTime = -1;
     }
     if(pumpSnooze != NULL) {
-      pumpSnoozeTime = pumpSnooze == "true" ? 30 : 0;
+      pumpSnoozeTime = pumpSnooze == "true" ? 30 : -1;
     } else {
-      pumpSnoozeTime = 0;
+      pumpSnoozeTime = -1;
     }
 
     Serial.print("Incoming LightSnooze Setting: ");
@@ -416,13 +416,13 @@ void handleSettingsUpdate(String &topic, String &payload) {
       light3 = false;
     }
     else {
-      if(light1Doc != NULL) {
+      if(light1Doc != "null") {
         light1 = light1Doc == "true" ? true : false;
       }
-      if(light2Doc != NULL) {
+      if(light2Doc != "null") {
         light2 = light2Doc == "true" ? true : false;
       }
-      if(light3Doc != NULL) {
+      if(light3Doc != "null") {
         light3 = light3Doc == "true" ? true : false;
       }
       if(dimmerPower != NULL) {
@@ -435,10 +435,10 @@ void handleSettingsUpdate(String &topic, String &payload) {
       fan2 = false;
     }
     else {
-      if(fan1Doc != NULL) {
+      if(fan1Doc != "null") {
         fan1 = fan1Doc == "true" ? true : false;
       }
-      if(fan2Doc != NULL) {
+      if(fan2Doc != "null") {
         fan2 = fan2Doc == "true" ? true : false;
       }
     }
@@ -446,7 +446,7 @@ void handleSettingsUpdate(String &topic, String &payload) {
       pump = false;
     }
     else {
-      if(pumpDoc != NULL) {
+      if(pumpDoc != "null") {
         pump = pumpDoc == "true" ? true : false;
       }
     }
@@ -633,6 +633,7 @@ void publishSettings()
     
   reportedObj["fan1-enabled"] = fan1;
   reportedObj["fan2-enabled"] = fan2;
+  reportedObj["pump-enabled"] = pump;
 
   reportedObj["light1-enabled"] = light1;
   reportedObj["light2-enabled"] = light2;
@@ -659,6 +660,7 @@ void publishSettings()
     
   desiredObj["fan1-enabled"] = fan1;
   desiredObj["fan2-enabled"] = fan2;
+  desiredObj["pump-enabled"] = pump;
 
   desiredObj["light1-enabled"] = light1;
   desiredObj["light2-enabled"] = light2;

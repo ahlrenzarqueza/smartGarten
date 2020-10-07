@@ -737,12 +737,12 @@ export class Tab2Page {
         }
         else {
           const shadowdt = JSON.parse(data.payload);
+          console.log('Snooze Check:', shadowdt);
           const state = shadowdt.state;
           const {fanSnooze, lightSnooze, pumpSnooze} = state.reported;
 
           if(fanSnooze == false) {
             // me.fanSnooze = false;
-            me.fanToggle = true;
             me.fanStatusArray[1] = state.reported['fan1-enabled'];
             me.fanStatusArray[2] = state.reported['fan2-enabled'];
           }
@@ -756,7 +756,7 @@ export class Tab2Page {
 
           if(lightSnooze == false) {
             // me.lightSnooze = false;
-            me.timeToggle = true;
+            // me.timeToggle = true;
             me.timeStatusArray[1] = state.reported['light1-enabled'];
             me.timeStatusArray[2] = state.reported['light2-enabled'];
             me.timeStatusArray[3] = state.reported['light3-enabled'];
