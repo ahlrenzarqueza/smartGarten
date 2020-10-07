@@ -7,6 +7,7 @@ import { NetworkInterface } from '@ionic-native/network-interface/ngx';
 import { Router } from "@angular/router";
 // declare var WifiWizard2: any;
 import { Zeroconf } from "@ionic-native/zeroconf/ngx";
+import { NgZone } from '@angular/core';
 import {LoadingController} from "@ionic/angular";
 import { AlertController } from "@ionic/angular";
 import * as AWS from 'aws-sdk';
@@ -29,7 +30,8 @@ export class Tab2Page {
                 private router:Router,
                 private zeroconf:Zeroconf,
                 private loadingController : LoadingController,
-                private alertController : AlertController
+                private alertController : AlertController,
+                private zone: NgZone
                 ) {
     // var sunset = "12:00 am";
     
@@ -57,7 +59,7 @@ export class Tab2Page {
 
   }
 
-  
+  bt_notif_initialized = false;
   sunset:any = new Date().toISOString();
   sunrise:any = new Date().toISOString();
   fansunset:any = new Date().toISOString();
@@ -141,6 +143,7 @@ export class Tab2Page {
           me.timeStatusArray[1] = state.reported['light1-enabled'];
           me.timeStatusArray[2] = state.reported['light2-enabled'];
           me.timeStatusArray[3] = state.reported['light3-enabled'];
+          console.log(me.timeStatusArray);
           me.pumpToggle = state.reported['pump-enabled'];
           me.fanSnooze = state.reported['fanSnoozeRemaining'] == 0 ? false : true;
           me.lightSnooze = state.reported['lightSnoozeRemaining'] == 0 ? false : true;
@@ -185,7 +188,7 @@ export class Tab2Page {
       });
     }
     else {
-      
+      this.getCurrentStateFromBt();
     }
   }
 
@@ -212,6 +215,57 @@ export class Tab2Page {
  
   hideLoader() {
     this.loadingController.dismiss();    
+  }
+
+  getCurrentStateFromBt () {
+    const me = this;
+    const {id : device_id} = this.bt_peripheral;
+      const charObj = this.bt_peripheral.characteristics.find(function (e) {
+        return e.characteristic == "FFE1";
+      });
+      const {characteristic : charac_id, service : service_id} = charObj;
+      
+      // BT Start Notification on init
+      if(!this.bt_notif_initialized) {
+        ble.startNotification(device_id, service_id, charac_id, (buffer) => {
+          var res = String.fromCharCode.apply(null, new Uint8Array(buffer));
+          me.zone.run( () => {
+            var keyval = res.split('=');
+            console.log('BT Set value on ' + keyval[0] + ' : ' + keyval[1]);
+            // switch(keyval[0]){
+            //   case "at": 
+            //     me.airtemp = parseFloat(keyval[1]);
+            //     break;
+            //   case "h": 
+            //     me.humid = parseFloat(keyval[1]);
+            //     break;
+            //   case "ph": 
+            //     me.phValue = parseFloat(keyval[1]);
+            //     break;
+            //   case "ec": 
+            //     me.ecValue = parseFloat(keyval[1]);
+            //     break;
+            //   case "wl": 
+            //     me.waterlevel = parseFloat(keyval[1]);
+            //     break;
+            //   case "wt": 
+            //     me.watertemp = parseFloat(keyval[1]);
+            //     break;
+            // }
+            // me.checkWarningTriggers();
+          });
+        }, (error) => {
+          console.log('BT Read Notification Error: ', error);
+        });
+        me.bt_notif_initialized = true;
+      }
+      
+      const writedata = me.stringToBytes('s');
+      ble.write(device_id, service_id, charac_id, writedata, () => {
+        console.log('BT Successfully sent request settings command.');
+      }, (error) => {
+        console.log('BT Failed to send request settings command.');
+      });
   }
 
 
@@ -536,8 +590,8 @@ export class Tab2Page {
 
   timerFunc(index:any)
   {
-    this.storage.get('timeToggle-'+index).then((currentState)=>{ 
-      console.log(currentState);
+    // this.storage.get('timeToggle-'+index).then((currentState)=>{ 
+      let currentState = this.timeStatusArray[index];
       this.storage.set('timeToggle-'+index, !currentState);
       this.timeStatusArray[index] = !currentState;
       this.postJsonObj["light"+index] = !currentState;
@@ -546,7 +600,7 @@ export class Tab2Page {
         ['lt'+index]: !currentState
       };
       this.handleDataChangeApi(bt_set_obj);
-    });
+    // });
     
   }
 
@@ -587,8 +641,8 @@ export class Tab2Page {
 
   fanFunc(index:any)
   {
-    this.storage.get('fanToggle-'+index).then((currentState)=>{ 
-      console.log(currentState);
+    // this.storage.get('fanToggle-'+index).then((currentState)=>{ 
+      let currentState = this.fanStatusArray[index];
       this.storage.set('fanToggle-'+index, !currentState);
       this.fanStatusArray[index] = !currentState;
       this.postJsonObj["fan"+index] = !currentState;
@@ -597,13 +651,13 @@ export class Tab2Page {
         ['ft'+index]: !currentState
       };
       this.handleDataChangeApi(bt_set_obj);
-    });
+    // });
   }
 
   lightSnoozeSet() {
     this.lightSnoozeRemaining = this.lightSnooze ? 30 : 0;
     const bt_set_obj = {
-      'lsr': this.lightSnoozeRemaining
+      'ls': this.lightSnooze
     };
     if(this.lightSnooze) {
       this.timeToggle = false;
@@ -619,7 +673,7 @@ export class Tab2Page {
   fanSnoozeSet() {
     this.fanSnoozeRemaining = this.fanSnooze ? 30 : 0;
     const bt_set_obj = {
-      'fsr':  this.fanSnoozeRemaining
+      'fs':  this.fanSnooze
     };
     if(this.fanSnooze) {
       this.fanToggle = false;
@@ -636,7 +690,7 @@ export class Tab2Page {
   pumpSnoozeSet() {
     this.pumpSnoozeRemaining = this.pumpSnooze ? 30 : 0
     const bt_set_obj = {
-      'psr': this.pumpSnoozeRemaining
+      'ps': this.pumpSnooze
     };
     if(this.pumpSnooze) {
       this.pumpToggle = false;
