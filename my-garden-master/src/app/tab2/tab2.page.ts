@@ -305,9 +305,9 @@ export class Tab2Page {
             "pumpsunset-hr": pumpsunsetdate.getHours(),
             "pumpsunset-min": pumpsunsetdate.getMinutes(),
             "lightIntensity": this.lightIntensity,
-            "fanSnooze": btdata && btdata['fs'] != undefined ? true : undefined,
-            "lightSnooze": btdata && btdata['ls'] != undefined ? true : undefined,
-            "pumpSnooze": btdata && btdata['ps'] != undefined ? true : undefined
+            "fanSnooze": btdata && btdata['fs'] != undefined ? btdata['fs'] : undefined,
+            "lightSnooze": btdata && btdata['ls'] != undefined ? btdata['ls'] : undefined,
+            "pumpSnooze": btdata && btdata['ps'] != undefined ? btdata['ps'] : undefined
           }
         }
       }
