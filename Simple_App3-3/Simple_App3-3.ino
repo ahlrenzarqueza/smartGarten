@@ -136,9 +136,9 @@ int fanTime = 0;
 bool pump = false;
 int pumpTime = 0;
 
-int lightSnoozeTime = 0;
-int fanSnoozeTime = 0;
-int pumpSnoozeTime = 0;
+int lightSnoozeTime = -1;
+int fanSnoozeTime = -1;
+int pumpSnoozeTime = -1;
 
 bool light1 = false;
 bool light2 = false;
@@ -346,12 +346,12 @@ void handleSettingsUpdate(String &topic, String &payload) {
     StaticJsonDocument<1024> doc;
     deserializeJson(doc, payload);
     
-    const bool fan1Doc = doc["state"]["fan1-enabled"];
-    const bool fan2Doc = doc["state"]["fan2-enabled"];
-    const bool pumpDoc = doc["state"]["pump-enabled"];
-    const bool light1Doc = doc["state"]["light1-enabled"];
-    const bool light2Doc = doc["state"]["light2-enabled"];
-    const bool light3Doc = doc["state"]["light3-enabled"];
+    const String fan1Doc = doc["state"]["fan1-enabled"];
+    const String fan2Doc = doc["state"]["fan2-enabled"];
+    const String pumpDoc = doc["state"]["pump-enabled"];
+    const String light1Doc = doc["state"]["light1-enabled"];
+    const String light2Doc = doc["state"]["light2-enabled"];
+    const String light3Doc = doc["state"]["light3-enabled"];
     
     const int sun_rise_hourDoc = doc["state"]["sunrise-hr"];
     const int sun_rise_minDoc = doc["state"]["sunrise-min"];
@@ -371,9 +371,9 @@ void handleSettingsUpdate(String &topic, String &payload) {
     const int fanOnTimer = doc["state"]["fanOnTimer"];
     const int pumpOnTimer = doc["state"]["pumpOnTimer"];
 
-    const int lightSnoozeRemaining = doc["state"]["lightSnoozeRemaining"];
-    const int fanSnoozeRemaining = doc["state"]["fanSnoozeRemaining"];
-    const int pumpSnoozeRemaining = doc["state"]["pumpSnoozeRemaining"];
+    const String lightSnooze = doc["state"]["lightSnooze"];
+    const String fanSnooze = doc["state"]["fanSnooze"];
+    const String pumpSnooze = doc["state"]["pumpSnooze"];
 
     const int dimmerPower = doc["state"]["lightIntensity"];
 
@@ -384,22 +384,32 @@ void handleSettingsUpdate(String &topic, String &payload) {
       pumpTime = pumpOnTimer;
     }
 
-    if(lightSnoozeRemaining != NULL) {
-      lightSnoozeTime = lightSnoozeRemaining;
+    if(lightSnooze != NULL) {
+      lightSnoozeTime = lightSnooze == "true" ? 30 : 0;
     } else {
       lightSnoozeTime = 0;
     }
-    if(fanSnoozeRemaining != NULL) {
-      fanSnoozeTime = fanSnoozeRemaining;
+    if(fanSnooze != NULL) {
+      fanSnoozeTime = fanSnooze == "true" ? 30 : 0;
     } else {
       fanSnoozeTime = 0;
     }
-    if(pumpSnoozeRemaining != NULL) {
-      pumpSnoozeTime = pumpSnoozeRemaining;
+    if(pumpSnooze != NULL) {
+      pumpSnoozeTime = pumpSnooze == "true" ? 30 : 0;
     } else {
       pumpSnoozeTime = 0;
     }
 
+    Serial.print("Incoming LightSnooze Setting: ");
+    Serial.println(lightSnoozeTime);
+    Serial.print("Incoming FanSnooze Setting: ");
+    Serial.println(fanSnoozeTime);
+    Serial.print("Incoming PumpSnooze Setting: ");
+    Serial.println(pumpSnoozeTime);
+    Serial.print("Incoming Light1Switch Setting: ");
+    Serial.println(light1Doc);
+    Serial.print("Incoming Light2Switch Setting: ");
+    Serial.println(light2Doc);
     if(lightSnoozeTime > 0) {
       light1 = false;
       light2 = false;
@@ -407,13 +417,13 @@ void handleSettingsUpdate(String &topic, String &payload) {
     }
     else {
       if(light1Doc != NULL) {
-        light1 = light1Doc;
+        light1 = light1Doc == "true" ? true : false;
       }
       if(light2Doc != NULL) {
-        light2 = light2Doc;
+        light2 = light2Doc == "true" ? true : false;
       }
       if(light3Doc != NULL) {
-        light3 = light3Doc;
+        light3 = light3Doc == "true" ? true : false;
       }
       if(dimmerPower != NULL) {
         lightIntensity = dimmerPower;
@@ -426,10 +436,10 @@ void handleSettingsUpdate(String &topic, String &payload) {
     }
     else {
       if(fan1Doc != NULL) {
-        fan1 = fan1Doc;
+        fan1 = fan1Doc == "true" ? true : false;
       }
       if(fan2Doc != NULL) {
-        fan2 = fan2Doc;
+        fan2 = fan2Doc == "true" ? true : false;
       }
     }
     if(pumpSnoozeTime > 0) {
@@ -437,7 +447,7 @@ void handleSettingsUpdate(String &topic, String &payload) {
     }
     else {
       if(pumpDoc != NULL) {
-        pump = pumpDoc;
+        pump = pumpDoc == "true" ? true : false;
       }
     }
 
@@ -670,30 +680,30 @@ void publishSettings()
   desiredObj["pumpsunset-min"] = pumpsunSetMin;
 
   if(fanSnoozeTime == -1) {
-    reportedObj["fanSnoozeRemaining"] = 0;
-    desiredObj["fanSnoozeRemaining"] = 0;
+    reportedObj["fanSnooze"] = false;
+    desiredObj["fanSnooze"] = false;
   }
   else {
-    reportedObj["fanSnoozeRemaining"] = fanSnoozeTime;
-    desiredObj["fanSnoozeRemaining"] = fanSnoozeTime;
+    reportedObj["fanSnooze"] = true;
+    desiredObj["fanSnooze"] = true;
   }
 
   if(pumpSnoozeTime == -1) {
-    reportedObj["pumpSnoozeRemaining"] = 0;
-    desiredObj["pumpSnoozeRemaining"] = 0;
+    reportedObj["pumpSnooze"] = false;
+    desiredObj["pumpSnooze"] = false;
   }
   else {
-    reportedObj["pumpSnoozeRemaining"] = pumpSnoozeTime;
-    desiredObj["pumpSnoozeRemaining"] = pumpSnoozeTime;
+    reportedObj["pumpSnooze"] = true;
+    desiredObj["pumpSnooze"] = true;
   }
 
   if(lightSnoozeTime == -1) {
-    reportedObj["lightSnoozeRemaining"] = 0;
-    desiredObj["lightSnoozeRemaining"] = 0;
+    reportedObj["lightSnooze"] = false;
+    desiredObj["lightSnooze"] = false;
   }
   else {
-    reportedObj["lightSnoozeRemaining"] = lightSnoozeTime;
-    desiredObj["lightSnoozeRemaining"] = lightSnoozeTime;
+    reportedObj["lightSnooze"] = true;
+    desiredObj["lightSnooze"] = true;
   }
    
   char jsonBuffer[1024];
@@ -801,6 +811,7 @@ void setup() {
   connectToWiFi();
   connectAWS();
   AWSpublish_Timer = millis();
+  publishSettings();
 }
 void loop() {
 
