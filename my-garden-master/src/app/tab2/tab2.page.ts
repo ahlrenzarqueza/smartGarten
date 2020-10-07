@@ -145,9 +145,9 @@ export class Tab2Page {
           me.timeStatusArray[3] = state.reported['light3-enabled'];
           console.log(me.timeStatusArray);
           me.pumpToggle = state.reported['pump-enabled'];
-          me.fanSnooze = state.reported['fanSnoozeRemaining'] == 0 ? false : true;
-          me.lightSnooze = state.reported['lightSnoozeRemaining'] == 0 ? false : true;
-          me.pumpSnooze = state.reported['pumpSnoozeRemaining'] == 0 ? false : true;
+          me.fanSnooze = state.reported['fanSnooze'] == false ? false : true;
+          me.lightSnooze = state.reported['lightSnooze'] == false ? false : true;
+          me.pumpSnooze = state.reported['pumpSnooze'] == false ? false : true;
           me.fanSnoozeRemaining = state.reported['fanSnoozeRemaining'];
           me.lightSnoozeRemaining = state.reported['lightSnoozeRemaining'];
           me.pumpSnoozeRemaining = state.reported['pumpSnoozeRemaining'];
@@ -305,9 +305,9 @@ export class Tab2Page {
             "pumpsunset-hr": pumpsunsetdate.getHours(),
             "pumpsunset-min": pumpsunsetdate.getMinutes(),
             "lightIntensity": this.lightIntensity,
-            "fanSnoozeRemaining": btdata && btdata['fsr'] != undefined ? btdata['fsr'] : undefined,
-            "lightSnoozeRemaining": btdata && btdata['lsr'] != undefined ? btdata['lsr'] : undefined,
-            "pumpSnoozeRemaining": btdata && btdata['psr'] != undefined ? btdata['psr'] : undefined
+            "fanSnooze": btdata && btdata['fs'] != undefined ? true : undefined,
+            "lightSnooze": btdata && btdata['ls'] != undefined ? true : undefined,
+            "pumpSnooze": btdata && btdata['ps'] != undefined ? true : undefined
           }
         }
       }
@@ -738,10 +738,10 @@ export class Tab2Page {
         else {
           const shadowdt = JSON.parse(data.payload);
           const state = shadowdt.state;
-          const {fanSnoozeRemaining, lightSnoozeRemaining, pumpSnoozeRemaining} = state.reported;
+          const {fanSnooze, lightSnooze, pumpSnooze} = state.reported;
 
-          if(fanSnoozeRemaining == 0) {
-            me.fanSnooze = false;
+          if(fanSnooze == false) {
+            // me.fanSnooze = false;
             me.fanToggle = true;
             me.fanStatusArray[1] = state.reported['fan1-enabled'];
             me.fanStatusArray[2] = state.reported['fan2-enabled'];
@@ -752,10 +752,10 @@ export class Tab2Page {
             me.fanStatusArray[1] = false
             me.fanStatusArray[2] = false
           }
-          me.fanSnoozeRemaining = fanSnoozeRemaining;
+          // me.fanSnoozeRemaining = fanSnoozeRemaining;
 
-          if(lightSnoozeRemaining == 0) {
-            me.lightSnooze = false;
+          if(lightSnooze == false) {
+            // me.lightSnooze = false;
             me.timeToggle = true;
             me.timeStatusArray[1] = state.reported['light1-enabled'];
             me.timeStatusArray[2] = state.reported['light2-enabled'];
@@ -768,18 +768,18 @@ export class Tab2Page {
             me.timeStatusArray[2] = false;
             me.timeStatusArray[3] = false;
           }
-          me.lightSnoozeRemaining = lightSnoozeRemaining;
+          // me.lightSnoozeRemaining = lightSNooze;
 
-          me.pumpToggle = state.reported['pump-enabled'];
-          if(pumpSnoozeRemaining == 0) {
-            me.pumpSnooze = false;
+          // me.pumpToggle = state.reported['pump-enabled'];
+          if(pumpSnooze == false) {
+            // me.pumpSnooze = false;
             me.pumpToggle = state.reported['pump-enabled'];
           }
           else {
             me.pumpSnooze = true;
             me.pumpToggle = false;
           }
-          me.pumpSnoozeRemaining = pumpSnoozeRemaining;
+          // me.pumpSnoozeRemaining = pumpSnooze;
         }
       });
     }
