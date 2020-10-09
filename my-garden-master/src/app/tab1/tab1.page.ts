@@ -247,7 +247,7 @@ export class Tab1Page {
         me.bt_notif_initialized = true;
       }
       
-      const writedata = me.stringToBytes('p');
+      const writedata = me.stringToBytes('pollmeasure\n');
       ble.write(device_id, service_id, charac_id, writedata, () => {
         console.log('BT Successfully sent poll command.');
       }, (error) => {

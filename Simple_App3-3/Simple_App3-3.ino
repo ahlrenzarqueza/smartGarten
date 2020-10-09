@@ -115,6 +115,12 @@ String phstr;
 String ecstr;
 String wlstr;
 String wtstr;
+String ssstr;
+String pssstr;
+String fssstr;
+String rtcstr;
+String flpstr;
+String sntstr;
 
 float Temperature_DS18B20;
 float tdsValue;
@@ -159,6 +165,12 @@ int pumpsunSetHour = 0;
 int pumpsunSetMin = 0;
 
 int lightIntensity = 0;
+
+// Bluetooth array store
+const byte btnumChars = 32;
+char btreceivedChars[btnumChars];   // an array to store the received data
+boolean btnewData = false;
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifdef ESP32
 #include <esp_wifi.h>
@@ -220,76 +232,167 @@ void check_status()
 
 
 void bt_messageHandler() {
-  byte ch;
-  if (Serial2.available()) {
-      ch = Serial2.read();
-      Serial.print(ch);
-         // Process command in sdata.
-        if (ch == 'p'){ // poll for measurements
-           Humidity = dht.readHumidity();
-           hstr = "h=" + String(Humidity);
-           Serial2.println(hstr); 
-           delay(1000);
-           Temperature = dht.readTemperature();
-           atstr = "at=" + String(Temperature);
-           Serial2.println(atstr); 
-           delay(1000);
-           PHValue = getPhValue();
-           phstr = "at=" + String(PHValue);
-           Serial2.println(phstr);
-           delay(1000);
-           gravityTds.setTemperature(Temperature_DS18B20);  // set the temperature and execute temperature compensation
-           gravityTds.update();  //sample and calculate
-           tdsValue = gravityTds.getTdsValue();  // then get the value
-           ecstr = "ec=" + String(tdsValue);
-           Serial2.println(ecstr);
-           delay(1000);
-           Waterlevel = (1 - (SensorValueCM - SensorSafetyDistance) / (SensorHeight - SensorSafetyDistance)) * 100;
-           wlstr = "wl=" + String(Waterlevel);
-           Serial2.println(wlstr);
-           delay(1000);
-           wtstr = "wt=" + String(Temperature_DS18B20);
-           Serial2.println(wtstr);
+  static byte ndx = 0;
+  char endMarker = '\n';
+  char rc;
+ 
+  while (Serial.available() > 0 && btnewData == false) {
+      rc = Serial.read();
+
+      if (rc != endMarker) {
+          btreceivedChars[ndx] = rc;
+          ndx++;
+          if (ndx >= btnumChars) {
+              ndx = btnumChars - 1;
+          }
+      }
+      else {
+          btreceivedChars[ndx] = '\0'; // terminate the string
+          ndx = 0;
+          btnewData = true;
+      }
+  }
+
+  if (btnewData == true) {
+      Serial.print("Incoming bluetooth msg ... ");
+      Serial.println(btreceivedChars);
+      if(strcmp(btreceivedChars, "pollmeasure") == 0) {
+        Humidity = dht.readHumidity();
+        hstr = "h=" + String(Humidity);
+        Serial2.println(hstr); 
+        delay(1000);
+        Temperature = dht.readTemperature();
+        atstr = "at=" + String(Temperature);
+        Serial2.println(atstr); 
+        delay(1000);
+        PHValue = getPhValue();
+        phstr = "at=" + String(PHValue);
+        Serial2.println(phstr);
+        delay(1000);
+        gravityTds.setTemperature(Temperature_DS18B20);  // set the temperature and execute temperature compensation
+        gravityTds.update();  //sample and calculate
+        tdsValue = gravityTds.getTdsValue();  // then get the value
+        ecstr = "ec=" + String(tdsValue);
+        Serial2.println(ecstr);
+        delay(1000);
+        Waterlevel = (1 - (SensorValueCM - SensorSafetyDistance) / (SensorHeight - SensorSafetyDistance)) * 100;
+        wlstr = "wl=" + String(Waterlevel);
+        Serial2.println(wlstr);
+        delay(1000);
+        wtstr = "wt=" + String(Temperature_DS18B20);
+        Serial2.println(wtstr);
+      }
+      else if(strcmp(btreceivedChars, "setting") == 0) {
+        ssstr = "ss=" + String(sunRiseHour) + "," + String(sunRiseMin);
+        ssstr = ssstr + "," + String(sunSetHour) + "," + String(sunSetMin);
+        Serial2.println(ssstr);
+        delay(1000);
+        fssstr = "fss=" + String(fansunRiseHour) + "," + String(fansunRiseMin);
+        fssstr = fssstr + "," + String(fansunSetHour) + "," + String(fansunSetMin);
+        Serial2.println(fssstr);
+        delay(1000);
+        pssstr = "fss=" + String(pumpsunRiseHour) + "," + String(pumpsunRiseMin);
+        pssstr = pssstr + "," + String(pumpsunSetHour) + "," + String(pumpsunSetMin);
+        Serial2.println(pssstr);
+        delay(1000);
+        flpstr = "flp=" + String(light1 ? "1" : "0") + "," + String(light2 ? "1" : "0");
+        flpstr = flpstr + "," + String(light3 ? "1" : "0") + "," + String(fan1 ? "1" : "0");
+        flpstr = flpstr + "," + String(fan2 ? "1" : "0") + "," + String(pump ? "1" : "0");
+        flpstr = flpstr + "," + String(lightIntensity);
+        Serial2.println(flpstr);
+        delay(1000);
+
+        int lsn, fsn, psn;
+        if(fanSnoozeTime == -1) {
+          fsn = 0;
         }
-         
-//         if (ch == 't'){
-//          Serial2.print("Temperature:");
-//          Temperature = dht.readTemperature(); // Gets the values of the temperature
-//          Serial2.println(Temperature);
-//         }
-//         else if (ch == 'h'){
-//          Serial2.print("Humidity:");
-//          Humidity = dht.readHumidity(); // Gets the values of the humidity
-//          Serial2.println(Humidity);
-//         }
-//         else if (ch == 'd'){
-//          Serial2.print("Distance:");
-//          SensorValueCM = getDistance();
-//          Serial2.println(SensorValueCM);
-//          }
-//         else if (ch == 'w'){
-//          Serial2.print("Water Level:");
-//          Waterlevel = (1 - (SensorValueCM - SensorSafetyDistance) / (SensorHeight - SensorSafetyDistance)) * 100;
-//          Serial2.println(Waterlevel);
-//          }
-//         else if (ch == 'p'){
-//          Serial2.print("ph Value:");
-//          PHValue = getPhValue();
-//          Serial2.println(PHValue);
-//          }
-//         else if (ch == 'x'){
-//          Serial2.print("Water Level:");
-//          Waterlevel = (1 - (SensorValueCM - SensorSafetyDistance) / (SensorHeight - SensorSafetyDistance)) * 100;
-//          Serial2.println(Waterlevel);
-//          }
-//         else if (ch == 'v'){
-//          Serial2.print("TDS Value:");
-//          gravityTds.setTemperature(Temperature_DS18B20);  // set the temperature and execute temperature compensation
-//          gravityTds.update();  //sample and calculate
-//          tdsValue = gravityTds.getTdsValue();  // then get the value
-//          Serial2.println(tdsValue);
-//          }
-   }
+        else {
+          fsn = 1;
+        }
+      
+        if(pumpSnoozeTime == -1) {
+          psn = 0;
+        }
+        else {
+          psn = 1;
+        }
+      
+        if(lightSnoozeTime == -1) {
+          lsn = 0;
+        }
+        else {
+          lsn = 1;
+        }
+        sntstr = "snt=" + String(lsn) + "," + String(fsn);
+        sntstr = sntstr + "," + String(psn) + "," + String(fanTime);
+        sntstr = sntstr + "," + String(pumpTime);
+        Serial2.println(sntstr);
+        delay(1000);
+        
+        const int yy = Clock.getYear();
+        const int mm  = Clock.getMonth(Century);
+        const int dd = Clock.getDate();
+        const int hh = Clock.getHour(h12, PM);
+        const int minute = Clock.getMinute();
+        const int ss = Clock.getSecond();
+
+        rtcstr = "rtc=" + String(yy) + "," + String(mm);
+        rtcstr = rtcstr + "," + String(dd) + "," + String(hh);
+        rtcstr = rtcstr + "," + String(minute) + "," + String(ss);
+        Serial2.println(rtcstr);
+      }
+
+      else if(strcmp(btreceivedChars, "snooze") == 0) {
+        int lsn, fsn, psn;
+        if(fanSnoozeTime == -1) {
+          fsn = 0;
+        }
+        else {
+          fsn = 1;
+        }
+      
+        if(pumpSnoozeTime == -1) {
+          psn = 0;
+        }
+        else {
+          psn = 1;
+        }
+      
+        if(lightSnoozeTime == -1) {
+          lsn = 0;
+        }
+        else {
+          lsn = 1;
+        }
+        sntstr = "snt=" + String(lsn) + "," + String(fsn);
+        sntstr = sntstr + "," + String(psn) + "," + String(fanTime);
+        sntstr = sntstr + "," + String(pumpTime);
+        Serial2.println(sntstr);
+      }
+
+      else if (strchr(btreceivedChars, '=')) {
+        char *setname;
+        char *setvalue;
+        char *pch = strtok(btreceivedChars,"=");
+        while(pch != NULL) {
+          Serial.print("BT Set Name read: ");
+          Serial.println(pch);
+          
+          setname = pch;
+          
+          pch = strtok(NULL, "=");
+          Serial.print("BT Set value: ");
+          Serial.println(pch);
+          setvalue = pch;
+
+          bt_setValue(setname, setvalue);
+          
+          pch = strtok(NULL,"=");
+        }
+      }
+//      btreceivedChars = [];
+      btnewData = false;
+  }
 }
 
 void handleSettingsUpdate(String &topic, String &payload) {
@@ -491,6 +594,129 @@ void handleSettingsUpdate(String &topic, String &payload) {
       pumpsunSetMin = pumpsun_set_minDoc;
     }
     publishSettings();
+  }
+}
+
+void bt_setValue (char* setname, char* setvalue) {
+  if(strcmp(setname, "srhr") == 0) {
+    sunRiseHour = atoi(setvalue);
+  }
+  else if(strcmp(setname, "sshr") == 0) {
+    sunSetHour = atoi(setvalue);
+  }
+  else if(strcmp(setname, "fsrhr") == 0) {
+    fansunRiseHour = atoi(setvalue);
+  }
+  else if(strcmp(setname, "fsshr") == 0) {
+    fansunSetHour = atoi(setvalue);
+  }
+  else if(strcmp(setname, "psrhr") == 0) {
+    pumpsunRiseHour = atoi(setvalue);
+  }
+  else if(strcmp(setname, "psshr") == 0) {
+    pumpsunRiseHour = atoi(setvalue);
+  }
+  else if(strcmp(setname, "srmm") == 0) {
+    sunRiseMin = atoi(setvalue);
+  }
+  else if(strcmp(setname, "ssmm") == 0) {
+    sunSetMin = atoi(setvalue);
+  }
+  else if(strcmp(setname, "fsrmm") == 0) {
+    fansunRiseMin = atoi(setvalue);
+  }
+  else if(strcmp(setname, "fssmm") == 0) {
+    fansunSetMin = atoi(setvalue);
+  }
+  else if(strcmp(setname, "psrmm") == 0) {
+    pumpsunRiseMin = atoi(setvalue);
+  }
+  else if(strcmp(setname, "pssmm") == 0) {
+    pumpsunSetMin = atoi(setvalue);
+  }
+  else if(strcmp(setname, "lt1") == 0) {
+    light1 = strcmp(setvalue, "true") == 0 ? true : false;
+  }
+  else if(strcmp(setname, "lt2") == 0) {
+    light2 = strcmp(setvalue, "true") == 0 ? true : false;
+  }
+  else if(strcmp(setname, "lt3") == 0) {
+    light3 = strcmp(setvalue, "true") == 0 ? true : false;
+  }
+  else if(strcmp(setname, "ft1") == 0) {
+    fan1 = strcmp(setvalue, "true") == 0 ? true : false;
+  }
+  else if(strcmp(setname, "ft2") == 0) {
+    fan2 = strcmp(setvalue, "true") == 0 ? true : false;
+  }
+  else if(strcmp(setname, "pt") == 0) {
+    pump = strcmp(setvalue, "true") == 0 ? true : false;
+  }
+  else if(strcmp(setname, "ftimer") == 0) {
+    fanTime = atoi(setvalue);
+  }
+  else if(strcmp(setname, "ptimer") == 0) {
+    pumpTime = atoi(setvalue);
+  }
+  else if(strcmp(setname, "lti") == 0) {
+    lightIntensity = atoi(setvalue);
+  }
+  else if(strcmp(setname, "ls") == 0) {
+    bool lightSnoozeActivate = strcmp(setvalue, "true") == 0;
+    lightSnoozeTime = lightSnoozeActivate ? 30 : -1;
+    if(lightSnoozeActivate) {
+      light1 = false;
+      light2 = false;
+      light3 = false;
+    }
+    else {
+      light1 = true;
+      light2 = true;
+      light3 = true;
+    }
+  }
+  else if(strcmp(setname, "fs") == 0) {
+    bool fanSnoozeActivate = strcmp(setvalue, "true") == 0;
+    fanSnoozeTime = fanSnoozeActivate ? 30 : -1;
+    if(fanSnoozeActivate) {
+      fan1 = false;
+      fan2 = false;
+    }
+    else {
+      fan1 = true;
+      fan2 = true;
+    }
+  }
+  else if(strcmp(setname, "ps") == 0) {
+    bool pumpSnoozeActivate = strcmp(setvalue, "true") == 0;
+    pumpSnoozeTime = pumpSnoozeActivate ? 30 : -1;
+    if(pumpSnoozeActivate) {
+      pump = false;
+    }
+    else {
+      pump = true;
+    }
+  }
+  else if(strcmp(setname, "year") == 0) {
+    Clock.setYear(atoi(setvalue));
+  }
+  else if(strcmp(setname, "month") == 0) {
+    Clock.setMonth(atoi(setvalue));
+  }
+  else if(strcmp(setname, "date") == 0) {
+    Clock.setDate(atoi(setvalue));
+  }
+  else if(strcmp(setname, "hour") == 0) {
+    Clock.setHour(atoi(setvalue));
+  }
+  else if(strcmp(setname, "minute") == 0) {
+    Clock.setMinute(atoi(setvalue));
+  }
+  else if(strcmp(setname, "second") == 0) {
+    Clock.setSecond(atoi(setvalue));
+  }
+  else if(strcmp(setname, "dow") == 0) {
+    Clock.setDoW(atoi(setvalue));
   }
 }
 

@@ -183,10 +183,10 @@
 
         <ion-row style="height:auto; border-top: 1px dotted gray;" class='grid-nav' align='center'>
           <ion-col> 
-            <ion-row class="ion-justify-content-center">
+            <ion-row *ngIf="isOnWifiMode" class="ion-justify-content-center">
               <ion-label>Aktuelle Geräteuhr</ion-label>
             </ion-row>
-            <ion-row class="ion-justify-content-center">
+            <ion-row *ngIf="isOnWifiMode" class="ion-justify-content-center">
               <ion-label style="font-weight: 800; font-size: 120%; padding: 2mm">{{datetimertc | date:'short'}}</ion-label>
             </ion-row>
             <ion-row class="ion-justify-content-center">

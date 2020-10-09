@@ -72,6 +72,7 @@ export class Tab2Page {
   activeDevice = null;
   activeDeviceName = null;
   activeConnectionMode = 'wifi';
+  isOnWifiMode = true;
   bt_peripheral = null;
   pendingBtWritePrm = null;
   snoozeTimeCheck = null;
@@ -115,6 +116,7 @@ export class Tab2Page {
     this.bt_peripheral = await this.storage.get('globalBtPeripheral');
 
     if(this.activeConnectionMode == 'wifi') {
+      this.isOnWifiMode = true;
       this.awsiotEndpoint = await this.storage.get('awsiotEndpoint');
       this.awsiotdata = new AWS.IotData({
         endpoint: this.awsiotEndpoint,
@@ -188,7 +190,9 @@ export class Tab2Page {
       });
     }
     else {
+      this.isOnWifiMode = false;
       this.getCurrentStateFromBt();
+      me.snoozeCheckInterval();
     }
   }
 
@@ -220,52 +224,98 @@ export class Tab2Page {
   getCurrentStateFromBt () {
     const me = this;
     const {id : device_id} = this.bt_peripheral;
-      const charObj = this.bt_peripheral.characteristics.find(function (e) {
-        return e.characteristic == "FFE1";
-      });
-      const {characteristic : charac_id, service : service_id} = charObj;
-      
-      // BT Start Notification on init
-      if(!this.bt_notif_initialized) {
-        ble.startNotification(device_id, service_id, charac_id, (buffer) => {
-          var res = String.fromCharCode.apply(null, new Uint8Array(buffer));
-          me.zone.run( () => {
-            var keyval = res.split('=');
-            console.log('BT Set value on ' + keyval[0] + ' : ' + keyval[1]);
-            // switch(keyval[0]){
-            //   case "at": 
-            //     me.airtemp = parseFloat(keyval[1]);
-            //     break;
-            //   case "h": 
-            //     me.humid = parseFloat(keyval[1]);
-            //     break;
-            //   case "ph": 
-            //     me.phValue = parseFloat(keyval[1]);
-            //     break;
-            //   case "ec": 
-            //     me.ecValue = parseFloat(keyval[1]);
-            //     break;
-            //   case "wl": 
-            //     me.waterlevel = parseFloat(keyval[1]);
-            //     break;
-            //   case "wt": 
-            //     me.watertemp = parseFloat(keyval[1]);
-            //     break;
-            // }
-            // me.checkWarningTriggers();
-          });
-        }, (error) => {
-          console.log('BT Read Notification Error: ', error);
+    const charObj = this.bt_peripheral.characteristics.find(function (e) {
+      return e.characteristic == "FFE1";
+    });
+    const {characteristic : charac_id, service : service_id} = charObj;
+    
+    // BT Start Notification on init
+    if(!this.bt_notif_initialized) {
+      ble.startNotification(device_id, service_id, charac_id, (buffer) => {
+        var res = String.fromCharCode.apply(null, new Uint8Array(buffer));
+        me.zone.run( () => {
+          var keyval = res.split('=');
+          console.log('BT Set value on ' + keyval[0] + ' : ' + keyval[1]);
+          switch(keyval[0]){
+            case "ss": 
+              const splitString = keyval[1].split(',');
+              const sunrisedate = new Date();
+              sunrisedate.setHours(parseInt(splitString[0]));
+              sunrisedate.setMinutes(parseInt(splitString[1]));
+              const sunsetdate = new Date();
+              sunsetdate.setHours(parseInt(splitString[2]));
+              sunsetdate.setMinutes(parseInt(splitString[3]));
+              me.sunrise = sunrisedate.toISOString();
+              me.sunset = sunsetdate.toISOString();
+              break;
+            case "fss": 
+              const fsplitString = keyval[1].split(',');
+              const fsunrisedate = new Date();
+              fsunrisedate.setHours(parseInt(fsplitString[0]));
+              fsunrisedate.setMinutes(parseInt(fsplitString[1]));
+              const fsunsetdate = new Date();
+              fsunsetdate.setHours(parseInt(fsplitString[2]));
+              fsunsetdate.setMinutes(parseInt(fsplitString[3]));
+              me.fansunrise = fsunrisedate.toISOString();
+              me.fansunset = fsunsetdate.toISOString();
+              break;
+            case "pss": 
+              const psplitString = keyval[1].split(',');
+              const psunrisedate = new Date();
+              psunrisedate.setHours(parseInt(psplitString[0]));
+              psunrisedate.setMinutes(parseInt(psplitString[1]));
+              const psunsetdate = new Date();
+              psunsetdate.setHours(parseInt(psplitString[2]));
+              psunsetdate.setMinutes(parseInt(psplitString[3]));
+              me.pumpsunrise = psunrisedate.toISOString();
+              me.pumpsunset = psunsetdate.toISOString();
+              break;
+            case "flp": 
+              const ltsplitString = keyval[1].split(',');
+              me.timeStatusArray[1] = (ltsplitString[0] == '1' ? true : false);
+              me.timeStatusArray[2] = (ltsplitString[1] == '1' ? true : false);
+              me.timeStatusArray[3] = (ltsplitString[2] == '1' ? true : false);
+              me.fanStatusArray[1] = (ltsplitString[3] == '1' ? true : false);
+              me.fanStatusArray[2] = (ltsplitString[4] == '1' ? true : false);
+              me.pumpToggle = (ltsplitString[5] == '1' ? true : false);
+              me.lightIntensity = parseInt(ltsplitString[9]);
+              break;
+            case "snt":
+              const sntsplitString = keyval[1].split(',');
+              me.lightSnooze = (sntsplitString[0] == '1' ? true : false);
+              me.fanSnooze = (sntsplitString[1] == '1' ? true : false);
+              me.pumpSnooze = (sntsplitString[2] == '1' ? true : false);
+              me.fanOnTimer = parseInt(sntsplitString[3]);
+              me.pumpOnTimer = parseInt(sntsplitString[4]);
+            case "rtc": 
+              const rtcsplitString = keyval[1].split(',');
+              const year = parseInt(rtcsplitString[0]);
+              const month = parseInt(rtcsplitString[1]);
+              const date = parseInt(rtcsplitString[2]);
+              const hour = parseInt(rtcsplitString[3]);
+              const minute = parseInt(rtcsplitString[4]);
+              const second = parseInt(rtcsplitString[5]);
+              const dateObj = new Date();
+              dateObj.setFullYear(year, month - 1, date);
+              dateObj.setHours(hour);
+              dateObj.setMinutes(minute);
+              dateObj.setSeconds(second);
+              me.datetimertc = dateObj;
+              break;
+          }
         });
-        me.bt_notif_initialized = true;
-      }
-      
-      const writedata = me.stringToBytes('s');
-      ble.write(device_id, service_id, charac_id, writedata, () => {
-        console.log('BT Successfully sent request settings command.');
       }, (error) => {
-        console.log('BT Failed to send request settings command.');
+        console.log('BT Read Notification Error: ', error);
       });
+      me.bt_notif_initialized = true;
+    }
+    
+    const writedata = me.stringToBytes('setting\n');
+    ble.write(device_id, service_id, charac_id, writedata, () => {
+      console.log('BT Successfully sent request settings command.');
+    }, (error) => {
+      console.log('BT Failed to send request settings command.');
+    });
   }
 
 
@@ -282,8 +332,6 @@ export class Tab2Page {
       const state = {
         state: {
           desired: {
-            // "fanLevel": this.fanSelect,
-            // "pumpLevel": this.pumpSelect,
             "fanOnTimer": this.fanOnTimer,
             "pumpOnTimer": this.pumpOnTimer,
             "fan1-enabled": this.fanStatusArray[1],
@@ -355,7 +403,7 @@ export class Tab2Page {
     const datakeys = Object.keys(btdata);
     const btWrite = function (index) {
       const datakey = datakeys[index];
-      const writedata = me.stringToBytes(datakey + '=' + btdata[datakey].toString());
+      const writedata = me.stringToBytes(datakey + '=' + btdata[datakey].toString() + '\n');
       ble.write(device_id, service_id, charac_id, writedata, () => {
         if(datakeys[index + 1]) 
           setTimeout(function (e) { return btWrite(index + 1); }, 1000);
@@ -488,30 +536,30 @@ export class Tab2Page {
     this.handleDataChangeApi(bt_set_obj);
   }
 
-  fanSelectFunc(data: String)
-  {
-    console.log(data);
-    this.fanSelect = data;
-    this.storage.set('fanSelect',this.fanSelect);
-    this.postJsonObj["fan_level"] = data;
-    // alert(this.fanSelect);
-    const bt_set_obj = {
-      fl: data
-    }
-    this.handleDataChangeApi(bt_set_obj);
-  }
+  // fanSelectFunc(data: String)
+  // {
+  //   console.log(data);
+  //   this.fanSelect = data;
+  //   this.storage.set('fanSelect',this.fanSelect);
+  //   this.postJsonObj["fan_level"] = data;
+  //   // alert(this.fanSelect);
+  //   const bt_set_obj = {
+  //     fl: data
+  //   }
+  //   this.handleDataChangeApi(bt_set_obj);
+  // }
 
-  pumpSelectFunc(data: String)
-  {
-    this.pumpSelect = data;
-    this.storage.set('pumpSelect',this.pumpSelect);
-    this.postJsonObj["pump_level"] = data;
-    // alert(this.pumpSelect);
-    const bt_set_obj = {
-      pl: data
-    }
-    this.handleDataChangeApi(bt_set_obj);
-  }
+  // pumpSelectFunc(data: String)
+  // {
+  //   this.pumpSelect = data;
+  //   this.storage.set('pumpSelect',this.pumpSelect);
+  //   this.postJsonObj["pump_level"] = data;
+  //   // alert(this.pumpSelect);
+  //   const bt_set_obj = {
+  //     pl: data
+  //   }
+  //   this.handleDataChangeApi(bt_set_obj);
+  // }
 
   sunTimer()
   {
@@ -621,22 +669,32 @@ export class Tab2Page {
         }
       }
     }
-    var params = {
-      payload: JSON.stringify(state),
-      thingName: this.activeDevice,
-      shadowName: 'Clock'
-    };
+    if(this.activeConnectionMode == "wifi") {
+      var params = {
+        payload: JSON.stringify(state),
+        thingName: this.activeDevice,
+        shadowName: 'Clock'
+      };
 
-    this.awsiotdata.updateThingShadow(params, function(err, data) {
-      if(err) {
-        console.log('AWS IOT Connection Error:', err);
-        me.presentAlert('Error in publishing garden set-up. Please reconnect to a device again.', 'AWS IOT Connection Error');
-        me.router.navigateByUrl('welcome');
-      }
-      else {
-        console.log('AWS IOT Updated Time RTC:', state);
-      }
-    });
+      this.awsiotdata.updateThingShadow(params, function(err, data) {
+        if(err) {
+          console.log('AWS IOT Connection Error:', err);
+          me.presentAlert('Error in publishing garden set-up. Please reconnect to a device again.', 'AWS IOT Connection Error');
+          me.router.navigateByUrl('welcome');
+        }
+        else {
+          console.log('AWS IOT Updated Time RTC:', state);
+        }
+      });
+    }
+    else {
+      const {id : device_id} = this.bt_peripheral;
+      const charObj = this.bt_peripheral.characteristics.find(function (e) {
+        return e.characteristic == "FFE1";
+      });
+      const {characteristic : charac_id, service : service_id} = charObj;
+      this.writeObjToBt(device_id, service_id, charac_id, state.state.desired);
+    }
   }
 
   fanFunc(index:any)
@@ -664,7 +722,7 @@ export class Tab2Page {
       for(var i=1; i<=3; i++){
         this.storage.set('timeToggle-'+i, false);
         this.timeStatusArray[i] = false;
-        bt_set_obj['lt'+i] = false;
+        // bt_set_obj['lt'+i] = false;
       }
     }
     this.handleDataChangeApi(bt_set_obj);
@@ -681,7 +739,7 @@ export class Tab2Page {
         this.storage.set('fanToggle-'+i, false);
         this.fanStatusArray[i] = false;
         this.postJsonObj["fan"+i] = false;
-        bt_set_obj['ft'+i] = false;
+        // bt_set_obj['ft'+i] = false;
       }
     }
     this.handleDataChangeApi(bt_set_obj);
@@ -696,28 +754,28 @@ export class Tab2Page {
       this.pumpToggle = false;
       this.storage.set('pumpToggle', false);
       this.postJsonObj["pump"] = false;
-      bt_set_obj['pt'] = false;
+      // bt_set_obj['pt'] = false;
     }
     this.handleDataChangeApi(bt_set_obj);
   }
 
   fanOnTimerSet() {
     const bt_set_obj = {
-      ['fanOnTimer']: this.fanOnTimer
+      ['ftimer']: this.fanOnTimer
     };
     this.handleDataChangeApi(bt_set_obj);
   }
 
   pumpOnTimerSet() {
     const bt_set_obj = {
-      ['pumpOnTimer']: this.pumpOnTimer
+      ['ptimer']: this.pumpOnTimer
     };
     this.handleDataChangeApi(bt_set_obj);
   }
 
   lightIntensitySet() {
     const bt_set_obj = {
-      ['lightIntensity']: this.lightIntensity
+      ['lti']: this.lightIntensity
     };
     this.handleDataChangeApi(bt_set_obj);
   }
@@ -729,60 +787,77 @@ export class Tab2Page {
       shadowName: 'Settings'
     };
     let checkFunction = function () {
-      me.awsiotdata.getThingShadow(params, function(err, data) {
-        if (err) {
-          console.log('AWS IOT Connection Error:', err);
-          me.presentAlert('Error in getting snooze data. Please reconnect to a device again.', 'AWS IOT Connection Error');
-          me.router.navigateByUrl('welcome');
-        }
-        else {
-          const shadowdt = JSON.parse(data.payload);
-          console.log('Snooze Check:', shadowdt);
-          const state = shadowdt.state;
-          const {fanSnooze, lightSnooze, pumpSnooze} = state.reported;
-
-          if(fanSnooze == false) {
-            // me.fanSnooze = false;
-            me.fanStatusArray[1] = state.reported['fan1-enabled'];
-            me.fanStatusArray[2] = state.reported['fan2-enabled'];
+      if(this.activeConnectionMode == "wifi") {
+        me.awsiotdata.getThingShadow(params, function(err, data) {
+          if (err) {
+            console.log('AWS IOT Connection Error:', err);
+            me.presentAlert('Error in getting snooze data. Please reconnect to a device again.', 'AWS IOT Connection Error');
+            me.router.navigateByUrl('welcome');
           }
           else {
-            me.fanSnooze = true;
-            me.fanToggle = false;
-            me.fanStatusArray[1] = false
-            me.fanStatusArray[2] = false
-          }
-          // me.fanSnoozeRemaining = fanSnoozeRemaining;
+            const shadowdt = JSON.parse(data.payload);
+            console.log('Snooze Check:', shadowdt);
+            const state = shadowdt.state;
+            const {fanSnooze, lightSnooze, pumpSnooze} = state.reported;
 
-          if(lightSnooze == false) {
-            // me.lightSnooze = false;
-            // me.timeToggle = true;
-            me.timeStatusArray[1] = state.reported['light1-enabled'];
-            me.timeStatusArray[2] = state.reported['light2-enabled'];
-            me.timeStatusArray[3] = state.reported['light3-enabled'];
-          }
-          else {
-            me.lightSnooze = true;
-            me.timeToggle = false;
-            me.timeStatusArray[1] = false;
-            me.timeStatusArray[2] = false;
-            me.timeStatusArray[3] = false;
-          }
-          // me.lightSnoozeRemaining = lightSNooze;
+            if(fanSnooze == false) {
+              // me.fanSnooze = false;
+              me.fanStatusArray[1] = state.reported['fan1-enabled'];
+              me.fanStatusArray[2] = state.reported['fan2-enabled'];
+            }
+            else {
+              me.fanSnooze = true;
+              me.fanToggle = false;
+              me.fanStatusArray[1] = false
+              me.fanStatusArray[2] = false
+            }
+            // me.fanSnoozeRemaining = fanSnoozeRemaining;
 
-          // me.pumpToggle = state.reported['pump-enabled'];
-          if(pumpSnooze == false) {
-            // me.pumpSnooze = false;
-            me.pumpToggle = state.reported['pump-enabled'];
+            if(lightSnooze == false) {
+              // me.lightSnooze = false;
+              // me.timeToggle = true;
+              me.timeStatusArray[1] = state.reported['light1-enabled'];
+              me.timeStatusArray[2] = state.reported['light2-enabled'];
+              me.timeStatusArray[3] = state.reported['light3-enabled'];
+            }
+            else {
+              me.lightSnooze = true;
+              me.timeToggle = false;
+              me.timeStatusArray[1] = false;
+              me.timeStatusArray[2] = false;
+              me.timeStatusArray[3] = false;
+            }
+            // me.lightSnoozeRemaining = lightSNooze;
+
+            // me.pumpToggle = state.reported['pump-enabled'];
+            if(pumpSnooze == false) {
+              // me.pumpSnooze = false;
+              me.pumpToggle = state.reported['pump-enabled'];
+            }
+            else {
+              me.pumpSnooze = true;
+              me.pumpToggle = false;
+            }
+            // me.pumpSnoozeRemaining = pumpSnooze;
           }
-          else {
-            me.pumpSnooze = true;
-            me.pumpToggle = false;
-          }
-          // me.pumpSnoozeRemaining = pumpSnooze;
-        }
-      });
+        });
+      }
+      else {
+        const {id : device_id} = this.bt_peripheral;
+        const charObj = this.bt_peripheral.characteristics.find(function (e) {
+          return e.characteristic == "FFE1";
+        });
+        const {characteristic : charac_id, service : service_id} = charObj;
+        
+        const writedata = me.stringToBytes('snooze\n');
+        ble.write(device_id, service_id, charac_id, writedata, () => {
+          console.log('BT Successfully sent request settings command.');
+        }, (error) => {
+          console.log('BT Failed to send request settings command.');
+        });
+      }
     }
+
     checkFunction();
     this.snoozeTimeCheck = setInterval(()=>{
       checkFunction();
