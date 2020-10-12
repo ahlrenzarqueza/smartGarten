@@ -211,7 +211,7 @@ export class Tab2Page {
     if(!this.bt_notif_initialized) {
       ble.startNotification(device_id, service_id, charac_id, (buffer) => {
         var res = String.fromCharCode.apply(null, new Uint8Array(buffer));
-        // me.zone.run( () => {
+        me.zone.run( () => {
           var keyval = res.split('=');
           console.log('BT Set value on ' + keyval[0] + ' : ' + keyval[1]);
           switch(keyval[0]){
@@ -283,7 +283,7 @@ export class Tab2Page {
               this.hideLoader();
               break;
           }
-        // });
+        });
       }, (error) => {
         console.log('BT Read Notification Error: ', error);
       });
@@ -520,91 +520,83 @@ export class Tab2Page {
 
   sunTimer()
   {
-    // this.zone.run( () => {
-      // alert('called');
-      // console.log(event.checked)
-      console.log(this.timeToggle);
-      this.storage.set('timeToggle',this.timeToggle);
-      const bt_set_obj = {};
-      for(var i=1; i<=3; i++){
-        this.storage.set('timeToggle-'+i, this.timeToggle);
-        this.timeStatusArray[i] = this.timeToggle;
-        this.postJsonObj["light"+i] = this.timeToggle;
-        bt_set_obj['lt'+i] = this.timeToggle;
-      }
-      
-      // alert(this.timeToggle);
-      this.handleDataChangeApi(bt_set_obj);
-    // });
+    // alert('called');
+    // console.log(event.checked)
+    console.log(this.timeToggle);
+    this.storage.set('timeToggle',this.timeToggle);
+    const bt_set_obj = {};
+    for(var i=1; i<=3; i++){
+      this.storage.set('timeToggle-'+i, this.timeToggle);
+      this.timeStatusArray[i] = this.timeToggle;
+      this.postJsonObj["light"+i] = this.timeToggle;
+      bt_set_obj['lt'+i] = this.timeToggle;
+    }
+    
+    // alert(this.timeToggle);
+    this.handleDataChangeApi(bt_set_obj);
   }
 
   checkSunTimer(){
-    // this.zone.run( () => {
-      let counter = 0;
-      for(var i=1; i<=3; i++){
-        if(this.timeStatusArray[i]){
-          counter++;
-        }
+    let counter = 0;
+    for(var i=1; i<=3; i++){
+      if(this.timeStatusArray[i]){
+        counter++;
       }
-      if(counter === 1){
-        this.timeToggle = true;
-      }else if(counter === 0){
-        this.timeToggle = false;
-      }
-      this.storage.set('timeToggle',this.timeToggle);
-    // });
+    }
+    if(counter === 1){
+      this.timeToggle = true;
+    }else if(counter === 0){
+      this.timeToggle = false;
+    }
+    this.storage.set('timeToggle',this.timeToggle);
   }
 
   checkFanTimer(){
-    // this.zone.run( () => {
-      let counter = 0;
-      for(var i=1; i<=2; i++){
-        if(this.fanStatusArray[i]){
-          counter++;
-        }
+    let counter = 0;
+    for(var i=1; i<=2; i++){
+      if(this.fanStatusArray[i]){
+        counter++;
       }
-      if(counter === 2){
-        this.fanToggle = true;
-      }else if(counter === 0){
-        this.fanToggle = false;
-      }
-      this.storage.set('fanToggle',this.fanToggle);
-    // });
+    }
+    if(counter === 2){
+      this.fanToggle = true;
+    }else if(counter === 0){
+      this.fanToggle = false;
+    }
+    this.storage.set('fanToggle',this.fanToggle);
   }
 
   fanToggleFunc()
   {
-    // this.zone.run( () => {
-      this.storage.set('fanToggle',this.fanToggle);
-      const bt_set_obj = {};
-      for(var i=1; i<=2; i++){
-        this.storage.set('fanToggle-'+i, this.fanToggle);
-        this.fanStatusArray[i] = this.fanToggle;
-        this.postJsonObj["fan"+i] = this.fanToggle;
-        bt_set_obj['ft'+i] = this.fanToggle;
-      }
-      // alert(this.timeToggle);
-      this.handleDataChangeApi(bt_set_obj);
-    // });
+    this.storage.set('fanToggle',this.fanToggle);
+    const bt_set_obj = {};
+    for(var i=1; i<=2; i++){
+      this.storage.set('fanToggle-'+i, this.fanToggle);
+      this.fanStatusArray[i] = this.fanToggle;
+      this.postJsonObj["fan"+i] = this.fanToggle;
+      bt_set_obj['ft'+i] = this.fanToggle;
+    }
+    // alert(this.timeToggle);
+    this.handleDataChangeApi(bt_set_obj);
+
   }
   
   pumpToggleFunc()
   {
-    // this.zone.run( () => {
-      this.storage.set('pumpToggle',this.pumpToggle);
-      this.postJsonObj["pump"] = this.pumpToggle;
-      // alert(this.timeToggle);
-      const bt_set_obj = {
-        pt: this.pumpToggle
-      };
-      this.handleDataChangeApi(bt_set_obj);
-    // });
+    this.storage.set('pumpToggle',this.pumpToggle);
+    this.postJsonObj["pump"] = this.pumpToggle;
+    // alert(this.timeToggle);
+    const bt_set_obj = {
+      pt: this.pumpToggle
+    };
+    this.handleDataChangeApi(bt_set_obj);
+
   }
 
   timerFunc(index:any)
   {
     // this.storage.get('timeToggle-'+index).then((currentState)=>{ 
-    // this.zone.run( () => {
+    this.zone.run( () => {
       let currentState = this.timeStatusArray[index];
       this.storage.set('timeToggle-'+index, !currentState);
       this.timeStatusArray[index] = !currentState;
@@ -614,7 +606,7 @@ export class Tab2Page {
         ['lt'+index]: !currentState
       };
       this.handleDataChangeApi(bt_set_obj);
-    // });
+    });
     
   }
 
@@ -665,7 +657,7 @@ export class Tab2Page {
 
   fanFunc(index:any)
   {
-    // this.zone.run( () => {
+    this.zone.run( () => {
       let currentState = this.fanStatusArray[index];
       this.storage.set('fanToggle-'+index, !currentState);
       this.fanStatusArray[index] = !currentState;
@@ -675,87 +667,75 @@ export class Tab2Page {
         ['ft'+index]: !currentState
       };
       this.handleDataChangeApi(bt_set_obj);
-    // });
+    });
   }
 
   lightSnoozeSet() {
-    // this.zone.run( () => {
-      this.lightSnoozeRemaining = this.lightSnooze ? 30 : 0;
-      const bt_set_obj = {
-        'ls': this.lightSnooze
-      };
-      if(this.lightSnooze) {
-        this.timeToggle = false;
-        for(var i=1; i<=3; i++){
-          this.storage.set('timeToggle-'+i, false);
-          this.timeStatusArray[i] = false;
-          // bt_set_obj['lt'+i] = false;
-        }
+    this.lightSnoozeRemaining = this.lightSnooze ? 30 : 0;
+    const bt_set_obj = {
+      'ls': this.lightSnooze
+    };
+    if(this.lightSnooze) {
+      this.timeToggle = false;
+      for(var i=1; i<=3; i++){
+        this.storage.set('timeToggle-'+i, false);
+        this.timeStatusArray[i] = false;
+        // bt_set_obj['lt'+i] = false;
       }
-      this.handleDataChangeApi(bt_set_obj);
-    // });
+    }
+    this.handleDataChangeApi(bt_set_obj);
   }
 
   fanSnoozeSet() {
-    // this.zone.run( () => {
-      this.fanSnoozeRemaining = this.fanSnooze ? 30 : 0;
-      const bt_set_obj = {
-        'fs':  this.fanSnooze
-      };
-      if(this.fanSnooze) {
-        this.fanToggle = false;
-        for(var i=1; i<=2; i++){
-          this.storage.set('fanToggle-'+i, false);
-          this.fanStatusArray[i] = false;
-          this.postJsonObj["fan"+i] = false;
-          // bt_set_obj['ft'+i] = false;
-        }
+    this.fanSnoozeRemaining = this.fanSnooze ? 30 : 0;
+    const bt_set_obj = {
+      'fs':  this.fanSnooze
+    };
+    if(this.fanSnooze) {
+      this.fanToggle = false;
+      for(var i=1; i<=2; i++){
+        this.storage.set('fanToggle-'+i, false);
+        this.fanStatusArray[i] = false;
+        this.postJsonObj["fan"+i] = false;
+        // bt_set_obj['ft'+i] = false;
       }
-      this.handleDataChangeApi(bt_set_obj);
-    // });
+    }
+    this.handleDataChangeApi(bt_set_obj);
   }
 
   pumpSnoozeSet() {
-    // this.zone.run( () => {
-      this.pumpSnoozeRemaining = this.pumpSnooze ? 30 : 0
-      const bt_set_obj = {
-        'ps': this.pumpSnooze
-      };
-      if(this.pumpSnooze) {
-        this.pumpToggle = false;
-        this.storage.set('pumpToggle', false);
-        this.postJsonObj["pump"] = false;
-        // bt_set_obj['pt'] = false;
-      }
-      this.handleDataChangeApi(bt_set_obj);
-    // });
+    this.pumpSnoozeRemaining = this.pumpSnooze ? 30 : 0
+    const bt_set_obj = {
+      'ps': this.pumpSnooze
+    };
+    if(this.pumpSnooze) {
+      this.pumpToggle = false;
+      this.storage.set('pumpToggle', false);
+      this.postJsonObj["pump"] = false;
+      // bt_set_obj['pt'] = false;
+    }
+    this.handleDataChangeApi(bt_set_obj);
   }
 
   fanOnTimerSet() {
-    // this.zone.run( () => {
-      const bt_set_obj = {
-        ['ftimer']: this.fanOnTimer
-      };
-      this.handleDataChangeApi(bt_set_obj);
-    // });
+    const bt_set_obj = {
+      ['ftimer']: this.fanOnTimer
+    };
+    this.handleDataChangeApi(bt_set_obj);
   }
 
   pumpOnTimerSet() {
-    // this.zone.run( () => {
-      const bt_set_obj = {
-        ['ptimer']: this.pumpOnTimer
-      };
-      this.handleDataChangeApi(bt_set_obj);
-    // });
+    const bt_set_obj = {
+      ['ptimer']: this.pumpOnTimer
+    };
+    this.handleDataChangeApi(bt_set_obj);
   }
 
   lightIntensitySet() {
-    // this.zone.run( () => {
-      const bt_set_obj = {
-        ['lti']: this.lightIntensity
-      };
-      this.handleDataChangeApi(bt_set_obj);
-    // });
+    const bt_set_obj = {
+      ['lti']: this.lightIntensity
+    };
+    this.handleDataChangeApi(bt_set_obj);
   }
 
   snoozeCheckInterval () {
