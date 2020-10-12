@@ -42,32 +42,7 @@ export class Tab1Page {
     private actionSheetController: ActionSheetController,
     private toastController: ToastController
   ) {
-    // this.zeroconf.registerAddressFamily = 'ipv4';
-    // this.zeroconf.watchAddressFamily = 'ipv4'; 
 
-    // TODO: What is the purpose of this. To remove for the meantime
-    // console.log('below is zeroconf');
-    // if (this.wifi_ip == null) {
-    //   if (this.platform.is('ios')) {
-    //     this.wifi_ip = "simpleplant.local";
-    //     this.storage.set('global_wifi_ip', this.wifi_ip);
-    //   } else {
-    //     this.zeroconf.watch('_http._tcp.', 'local.').subscribe(result => {
-    //       console.log(result);
-    //       var service = result.service;
-    //       if (result.action == 'resolved') {
-    //         if(service.name === "simpleplant"){
-    //           alert(result.service.ipv4Addresses[0]);
-    //           console.log(result);
-    //           this.wifi_ip = result.service.ipv4Addresses[0];
-    //           this.storage.set('global_wifi_ip', this.wifi_ip);
-    //         }            
-    //       } else {
-    //         console.log('service removed', result.service);
-    //       }
-    //     });
-    //   }
-    // }
   }
   awsiotdata:any = null;
   awsiotEndpoint = null;
@@ -139,40 +114,6 @@ export class Tab1Page {
       }); 
     }
 
-    // TODO : Deprecated code
-    // if(this.activeConnectionMode == 'wifi') {
-    //   if (this.wifi_ip == null) {
-    //     if (this.platform.is('ios')) {
-    //       this.wifi_ip = "simpleplant.local";
-    //     } else {
-    //       this.zeroconf.watch('_http._tcp.', 'local.').subscribe(result => {
-    //         console.log(result);
-    //         var service = result.service;
-    //         if (result.action == 'resolved') {
-    //           if(service.name === "simpleplant"){
-    //             // alert(result.service.ipv4Addresses[0]);
-    //             console.log(result);
-    //             this.wifi_ip = result.service.ipv4Addresses[0];
-    //             this.storage.set('global_wifi_ip', this.wifi_ip);
-    //           }            
-    //         } else {
-    //           console.log('service removed', result.service);
-    //         }
-    //       });
-    //     }
-    //   }
-    // }
-
-    // this.wifi_ip = "simplePlant.local";
-    // if(this.platform.is('ios'))
-    // {
-    //   this.wifi_ip = "192.168.43.189";
-    //   // this.networkInt.getWiFiIPAddress().then(ip=>{this.wifi_ip = ip;}).catch((err)=>{alert(err);})
-    // }else{
-    //   this.wifi_ip = "192.168.43.189";
-    //   // WifiWizard2.getWifiRouterIP().then((ip)=>{this.wifi_ip = ip;}).catch((err)=>{alert(err);});
-    // }
-
     this.getResults();
     this.loopGetResults();
   }
@@ -195,12 +136,12 @@ export class Tab1Page {
           const shadowdt = JSON.parse(data.payload);
           console.log('AWS IoT State', shadowdt);
           const state = shadowdt.state;
-          me.airtemp = parseFloat(state.reported.airTemperature);
-          me.humid = parseFloat(state.reported.humidity);
-          me.phValue = parseFloat(state.reported.phValue);
-          me.ecValue = (parseFloat(state.reported.tdsValue) * 2) / 1000;
-          me.waterlevel = parseFloat(state.reported.waterLevel);
-          me.watertemp = parseFloat(state.reported.waterTemperature);
+          me.airtemp = me.parseToFloatTwoFixed(state.reported.airTemperature);
+          me.humid = me.parseToFloatTwoFixed(state.reported.humidity);
+          me.phValue = me.parseToFloatTwoFixed(state.reported.phValue);
+          me.ecValue = (me.parseToFloatTwoFixed(state.reported.tdsValue) * 2) / 1000;
+          me.waterlevel = me.parseToFloatTwoFixed(state.reported.waterLevel);
+          me.watertemp = me.parseToFloatTwoFixed(state.reported.waterTemperature);
           me.checkWarningTriggers();
         }
       });
@@ -221,22 +162,22 @@ export class Tab1Page {
             console.log('BT Set value on ' + keyval[0] + ' : ' + keyval[1]);
             switch(keyval[0]){
               case "at": 
-                me.airtemp = parseFloat(keyval[1]);
+                me.airtemp = me.parseToFloatTwoFixed(keyval[1]);
                 break;
               case "h": 
-                me.humid = parseFloat(keyval[1]);
+                me.humid =  me.parseToFloatTwoFixed(keyval[1]);
                 break;
               case "ph": 
-                me.phValue = parseFloat(keyval[1]);
+                me.phValue = me.parseToFloatTwoFixed(keyval[1]);
                 break;
               case "ec": 
-                me.ecValue = parseFloat(keyval[1]);
+                me.ecValue = me.parseToFloatTwoFixed(keyval[1]);
                 break;
               case "wl": 
-                me.waterlevel = parseFloat(keyval[1]);
+                me.waterlevel = me.parseToFloatTwoFixed(keyval[1]);
                 break;
               case "wt": 
-                me.watertemp = parseFloat(keyval[1]);
+                me.watertemp = me.parseToFloatTwoFixed(keyval[1]);
                 break;
             }
             me.checkWarningTriggers();
@@ -430,5 +371,11 @@ export class Tab1Page {
     });
     toast.present();
     this.toastInstances[toastid] = toast;
+  }
+
+  parseToFloatTwoFixed(str) {
+    let floatnum = parseFloat(str);
+    if(isNaN(floatnum)) floatnum = 0;
+    return parseFloat(floatnum.toFixed(2));
   }
 }

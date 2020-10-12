@@ -342,6 +342,13 @@ export class WelcomePage implements OnInit {
         else {
           existingDev.name = newdevice.name;
         }
+
+        if(this.gardenNameSettings[newdevice.id]) {
+          if(!existingDev) newdevice.name = this.gardenNameSettings[newdevice.id];
+          else {
+            existingDev.name = this.gardenNameSettings[newdevice.id];
+          }
+        }
       },
       error => {
         console.log('BT Scan devices error:', error);

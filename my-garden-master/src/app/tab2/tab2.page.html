@@ -8,7 +8,6 @@
   <ion-grid style="padding: 0%">
       <ion-row style="height: auto"class = 'grid-nav' align='center'>
           <ion-col size ='2' align='left' col-xl-2 col-lg-3 col-md-4 class="tab2-img-col">
-              <!-- change the src of the <ion-img> to change image -->
               <ion-img class='tab2-body-img' src="assets/icon/sun.png"></ion-img>
               <ion-toggle mode='md'  [(ngModel)] = 'timeToggle' (ngModelChange) = 'sunTimer()'  color="custgreen" class="tab2-toggle toggle-calm" ></ion-toggle>
           </ion-col>
@@ -16,14 +15,11 @@
           <ion-col size ='8'>
             <ion-row >
               <ion-col size ='6' col-xl-2 col-lg-3 col-md-4>
-                <!-- <p class="tab2-margin"><b> &nbsp; Sunrise </b> </p>  -->
-                <!-- <ion-label position="floating">hh:mm a</ion-label> -->
                 <ion-datetime (ionChange) = 'sunriseFunc()' ngClass='datetimepicker'  displayFormat="hh:mm a" [(ngModel)] = 'sunrise'></ion-datetime>     
               </ion-col>
 
               <ion-col size ='6' col-xl-2 col-lg-3 col-md-4>
-                  <!-- <p class="tab2-margin"><b> &nbsp; Sunset </b></p>     -->
-                      <ion-datetime (ionChange) = 'sunsetFunc()' ngClass='datetimepicker' displayFormat="hh:mm a" [(ngModel)] = 'sunset'></ion-datetime> 
+                <ion-datetime (ionChange) = 'sunsetFunc()' ngClass='datetimepicker' displayFormat="hh:mm a" [(ngModel)] = 'sunset'></ion-datetime> 
               </ion-col>
             </ion-row>
             <ion-row  style="margin-left: 2vw;">                      
@@ -52,9 +48,6 @@
 
           <ion-col size ='2' col-xl-2 col-lg-3 col-md-4>
             <ion-img class='tab2-body-img' src="assets/new-icon/Snooze.svg"></ion-img>
-            <!-- <h4>
-              Schlummer: 
-            </h4> -->
             <ion-label class="snooze-label">{{(lightSnooze == true) ? 'ON' : 'OFF'}}</ion-label>
             <ion-toggle mode='md'  [(ngModel)] = 'lightSnooze' (ngModelChange) = 'lightSnoozeSet()'  color="custgreen" class="tab2-snooze-toggle toggle-calm" ></ion-toggle>
           </ion-col>  
@@ -62,64 +55,41 @@
 
         <ion-row style="height:auto" class = 'grid-nav' align='center'>
             <ion-col size ='2' align='left' class="tab2-img-col">
-              <!-- change the src of the <ion-img> to change image -->
               <ion-img class='tab2-body-img' src="assets/icon/wind.png"></ion-img>
               <ion-toggle mode='md'  color="custgreen" [(ngModel)] = "fanToggle" (ionChange)="fanToggleFunc()" class="tab2-toggle" ></ion-toggle>
             </ion-col>
       
             <ion-col size ='8'>
-                      <!-- <div style="padding-top: 14%;" class="segment-padding">
-                        <ion-segment [(ngModel)]="fanSelect" color='custgrey' mode = 'ios'>
-                          <ion-segment-button (ionSelect)="fanSelectFunc('low')" mode = 'ios' value="low">
-                            Low
-                          </ion-segment-button>
-                          <ion-segment-button (ionSelect)="fanSelectFunc('medium')" mode = 'ios' value="medium">
-                            Medium
-                          </ion-segment-button>
-                          <ion-segment-button (ionSelect)="fanSelectFunc('high')" mode = 'ios' value="high">
-                            High
-                          </ion-segment-button>
-                        </ion-segment>
-                      </div>    -->
-                      <!-- <ion-radio-group color="warning"> -->
-                        <ion-row >
-                          <ion-col size ='6' col-xl-2 col-lg-3 col-md-4>
-                            <!-- <p class="tab2-margin"><b> &nbsp; Sunrise </b> </p>  -->
-                            <!-- <ion-label position="floating">hh:mm a</ion-label> -->
-                            <ion-datetime (ionChange) = 'fansunriseFunc()' ngClass='datetimepicker'  displayFormat="hh:mm a" [(ngModel)] = 'fansunrise'></ion-datetime>     
-                          </ion-col>
-            
-                          <ion-col size ='6' col-xl-2 col-lg-3 col-md-4>
-                              <!-- <p class="tab2-margin"><b> &nbsp; Sunset </b></p>     -->
-                                  <ion-datetime (ionChange) = 'fansunsetFunc()' ngClass='datetimepicker' displayFormat="hh:mm a" [(ngModel)] = 'fansunset'></ion-datetime> 
-                          </ion-col>
-                        </ion-row>
-                        <ion-row >                      
-                          <ion-col>
-                              <ion-button shape="round" size="small" fill='outline' ngClass='round-button' [color]="fanStatusArray[1]?'custgreen':'custgrey'" (click)="fanFunc(1)"></ion-button>   
-                          </ion-col>
+              <ion-row >
+                <ion-col size ='6' col-xl-2 col-lg-3 col-md-4>
+                  <ion-datetime (ionChange) = 'fansunriseFunc()' ngClass='datetimepicker'  displayFormat="hh:mm a" [(ngModel)] = 'fansunrise'></ion-datetime>     
+                </ion-col>
+  
+                <ion-col size ='6' col-xl-2 col-lg-3 col-md-4>
+                  <ion-datetime (ionChange) = 'fansunsetFunc()' ngClass='datetimepicker' displayFormat="hh:mm a" [(ngModel)] = 'fansunset'></ion-datetime> 
+                </ion-col>
+              </ion-row>
+              <ion-row >                      
+                <ion-col>
+                    <ion-button shape="round" size="small" fill='outline' ngClass='round-button' [color]="fanStatusArray[1]?'custgreen':'custgrey'" (click)="fanFunc(1)"></ion-button>   
+                </ion-col>
 
-                          <ion-col>
-                              <ion-button shape="round" size="small" fill='outline' ngClass='round-button' [color]="fanStatusArray[2]?'custgreen':'custgrey'" (click)="fanFunc(2)"></ion-button>   
-                          </ion-col>
-                        </ion-row>   
-                        <ion-row>
-                          <ion-range min="10" max="60" step="1" snaps="true" color="custgreen" debounce=500 [(ngModel)] = 'fanOnTimer' (ngModelChange) = 'fanOnTimerSet()'>
-                            <ion-icon size="small" slot="start" name="alarm"></ion-icon>
-                            <ion-icon slot="end" name="alarm"></ion-icon>
-                          </ion-range>
-                        </ion-row> 
-                        <ion-row class="ion-justify-content-center">
-                          <ion-label>Fan is ON: {{fanOnTimer}} mins per hour</ion-label>
-                        </ion-row>
-                      <!-- </ion-radio-group> -->
-
-              </ion-col>
+                <ion-col>
+                    <ion-button shape="round" size="small" fill='outline' ngClass='round-button' [color]="fanStatusArray[2]?'custgreen':'custgrey'" (click)="fanFunc(2)"></ion-button>   
+                </ion-col>
+              </ion-row>   
+              <ion-row>
+                <ion-range min="10" max="60" step="1" snaps="true" color="custgreen" debounce=500 [(ngModel)] = 'fanOnTimer' (ngModelChange) = 'fanOnTimerSet()'>
+                  <ion-icon size="small" slot="start" name="alarm"></ion-icon>
+                  <ion-icon slot="end" name="alarm"></ion-icon>
+                </ion-range>
+              </ion-row> 
+              <ion-row class="ion-justify-content-center">
+                <ion-label>Fan is ON: {{fanOnTimer}} mins per hour</ion-label>
+              </ion-row>
+            </ion-col>
             <ion-col size ='2'>
               <ion-img class='tab2-body-img' src="assets/new-icon/Snooze.svg"></ion-img>
-              <!-- <h4>
-                Schlummer: 
-              </h4> -->
               <ion-label class="snooze-label">{{(fanSnooze == true) ? 'ON' : 'OFF'}}</ion-label>
               <ion-toggle mode='md'  [(ngModel)] = 'fanSnooze' (ngModelChange) = 'fanSnoozeSet()'  color="custgreen" class="tab2-snooze-toggle toggle-calm" ></ion-toggle>
             </ion-col>
@@ -128,35 +98,18 @@
 
         <ion-row style="height:auto" class = 'grid-nav' align='center'>
             <ion-col size ='2' align='left' class="tab2-img-col">
-              <!-- change the src of the <ion-img> to change image -->
               <ion-img class='tab2-body-img' src="assets/icon/vintage-water-pump.png"></ion-img>
               <ion-toggle mode='md'  color="custgreen" [(ngModel)] = "pumpToggle" (ionChange)="pumpToggleFunc()" style="padding-top:66%;" class="tab2-toggle" ></ion-toggle>
             </ion-col>
       
             <ion-col size ='8' class='ion-justify-content-center' style='display: flex; flex-direction: column;'>
-              <!-- <div class="segment-padding" style="padding-top: 12%;">
-                <ion-segment [(ngModel)]="pumpSelect" color='custgrey' mode = 'ios'>
-                  <ion-segment-button (ionSelect)="pumpSelectFunc('low')" mode = 'ios' value="low">
-                    Low
-                  </ion-segment-button>
-                  <ion-segment-button (ionSelect)="pumpSelectFunc('medium')" mode = 'ios' value="medium">
-                    Medium
-                  </ion-segment-button>
-                  <ion-segment-button (ionSelect)="pumpSelectFunc('high')" mode = 'ios' value="high">
-                    High
-                  </ion-segment-button>
-                </ion-segment>
-              </div>       -->
               <ion-row >
                 <ion-col size ='6' col-xl-2 col-lg-3 col-md-4>
-                  <!-- <p class="tab2-margin"><b> &nbsp; Sunrise </b> </p>  -->
-                  <!-- <ion-label position="floating">hh:mm a</ion-label> -->
                   <ion-datetime (ionChange) = 'pumpsunriseFunc()' ngClass='datetimepicker'  displayFormat="hh:mm a" [(ngModel)] = 'pumpsunrise'></ion-datetime>     
                 </ion-col>
   
                 <ion-col size ='6' col-xl-2 col-lg-3 col-md-4>
-                    <!-- <p class="tab2-margin"><b> &nbsp; Sunset </b></p>     -->
-                        <ion-datetime (ionChange) = 'pumpsunsetFunc()' ngClass='datetimepicker' displayFormat="hh:mm a" [(ngModel)] = 'pumpsunset'></ion-datetime> 
+                  <ion-datetime (ionChange) = 'pumpsunsetFunc()' ngClass='datetimepicker' displayFormat="hh:mm a" [(ngModel)] = 'pumpsunset'></ion-datetime> 
                 </ion-col>
               </ion-row>
               <ion-row>
@@ -172,9 +125,6 @@
 
             <ion-col size ='2'>
               <ion-img class='tab2-body-img' src="assets/new-icon/Snooze.svg"></ion-img>
-              <!-- <h4>
-                Schlummer: 
-              </h4> -->
               <ion-label class="snooze-label">{{(pumpSnooze == true) ? 'ON' : 'OFF'}}</ion-label>
               <ion-toggle mode='md'  [(ngModel)] = 'pumpSnooze' (ngModelChange) = 'pumpSnoozeSet()'  color="custgreen" class="tab2-snooze-toggle toggle-calm" ></ion-toggle>
             </ion-col>

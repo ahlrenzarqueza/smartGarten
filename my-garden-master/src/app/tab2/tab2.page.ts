@@ -5,7 +5,6 @@ import { HttpClient } from "@angular/common/http";
 import { Platform } from '@ionic/angular';
 import { NetworkInterface } from '@ionic-native/network-interface/ngx';
 import { Router } from "@angular/router";
-// declare var WifiWizard2: any;
 import { Zeroconf } from "@ionic-native/zeroconf/ngx";
 import { NgZone } from '@angular/core';
 import {LoadingController} from "@ionic/angular";
@@ -23,40 +22,16 @@ declare var ble: any;
 export class Tab2Page {
 
   constructor( private iab: InAppBrowser ,
-                private storage: Storage ,
-                private platform : Platform,
-                public networkInt:NetworkInterface,
-                private http:HttpClient,
-                private router:Router,
-                private zeroconf:Zeroconf,
-                private loadingController : LoadingController,
-                private alertController : AlertController,
-                private zone: NgZone
+              private storage: Storage ,
+              private platform : Platform,
+              public networkInt:NetworkInterface,
+              private http:HttpClient,
+              private router:Router,
+              private zeroconf:Zeroconf,
+              private loadingController : LoadingController,
+              private alertController : AlertController,
+              private zone: NgZone
                 ) {
-    // var sunset = "12:00 am";
-    
-        // console.log(this.sunset);
-        // this.storage.get('timeToggle').then((val)=>{this.timeToggle = val});
-        // this.storage.get('fanToggle').then((val)=>{this.fanToggle = val});
-        // this.storage.get('pumpToggle').then((val)=>{this.pumpToggle = val});
-        // this.storage.get('fanSelect').then((val)=>{this.fanSelect = val});
-        // this.storage.get('pumpSelect').then((val)=>{this.pumpSelect = val});
-        // this.storage.get('sunrise').then((val)=>{if(val != null){this.sunrise = val;}});
-        // this.storage.get('sunset').then((val)=>{if(val != null){this.sunset = val;}});
-        // console.log('sunrise = '+this.sunrise);
-        // console.log('sunset = '+this.sunset);
-        // this.storage.get('timeToggle-1').then((val)=>{console.log('timeToggle-1',val);this.timeStatusArray[1] = val});
-        // this.storage.get('timeToggle-2').then((val)=>{console.log('timeToggle-2',val);this.timeStatusArray[2] = val});
-        // this.storage.get('timeToggle-3').then((val)=>{console.log('timeToggle-3',val);this.timeStatusArray[3] = val});
-        
-        // this.storage.get('fanToggle-1').then((val)=>{console.log('fanToggle-1',val);this.fanStatusArray[1] = val});        
-        // this.storage.get('fanToggle-2').then((val)=>{console.log('fanToggle-2',val);this.fanStatusArray[2] = val});
-        // console.log('below is zeroconf');
-        // if(this.wifi_ip == null)
-        // {
-        //   this.storage.get('global_wifi_ip').then( val => {this.wifi_ip = val});
-        // }
-
   }
 
   bt_notif_initialized = false;
@@ -535,31 +510,6 @@ export class Tab2Page {
     }
     this.handleDataChangeApi(bt_set_obj);
   }
-
-  // fanSelectFunc(data: String)
-  // {
-  //   console.log(data);
-  //   this.fanSelect = data;
-  //   this.storage.set('fanSelect',this.fanSelect);
-  //   this.postJsonObj["fan_level"] = data;
-  //   // alert(this.fanSelect);
-  //   const bt_set_obj = {
-  //     fl: data
-  //   }
-  //   this.handleDataChangeApi(bt_set_obj);
-  // }
-
-  // pumpSelectFunc(data: String)
-  // {
-  //   this.pumpSelect = data;
-  //   this.storage.set('pumpSelect',this.pumpSelect);
-  //   this.postJsonObj["pump_level"] = data;
-  //   // alert(this.pumpSelect);
-  //   const bt_set_obj = {
-  //     pl: data
-  //   }
-  //   this.handleDataChangeApi(bt_set_obj);
-  // }
 
   sunTimer()
   {
