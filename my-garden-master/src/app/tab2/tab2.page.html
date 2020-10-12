@@ -79,7 +79,7 @@
                 </ion-col>
               </ion-row>   
               <ion-row>
-                <ion-range min="10" max="60" step="1" snaps="true" color="custgreen" debounce=500 [(ngModel)] = 'fanOnTimer' (ngModelChange) = 'fanOnTimerSet()'>
+                <ion-range min="10" max="60" step="1" snaps="true" color="custgreen" debounce=500 [(ngModel)] = 'fanOnTimer' (ngModelChange) = 'fanOnTimerSet($event)'>
                   <ion-icon size="small" slot="start" name="alarm"></ion-icon>
                   <ion-icon slot="end" name="alarm"></ion-icon>
                 </ion-range>
