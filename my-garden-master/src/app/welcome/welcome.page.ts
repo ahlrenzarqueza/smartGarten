@@ -336,18 +336,15 @@ export class WelcomePage implements OnInit {
     this.btdevices = [];
     ble.startScan([], 
       newdevice => {
-        var existingDev = this.btdevices.find(dev => (dev.id == newdevice.id))
+        let existingDev = this.btdevices.find(dev => (dev.id == newdevice.id))
         
-        if(!existingDev) this.btdevices.push(newdevice);
-        else {
-          existingDev.name = newdevice.name;
+        if(!existingDev) {
+          if(this.gardenNameSettings[newdevice.id]) 
+            newdevice.name = this.gardenNameSettings[newdevice.id];
+          this.btdevices.push(newdevice);
         }
-
-        if(this.gardenNameSettings[newdevice.id]) {
-          if(!existingDev) newdevice.name = this.gardenNameSettings[newdevice.id];
-          else {
-            existingDev.name = this.gardenNameSettings[newdevice.id];
-          }
+        else {
+          existingDev.name = this.gardenNameSettings[newdevice.id] ? this.gardenNameSettings[newdevice.id] : newdevice.name;
         }
       },
       error => {
@@ -428,7 +425,7 @@ export class WelcomePage implements OnInit {
     await this.storage.set('globalConnectedDevName', this.connectionMode == 'bluetooth' ? 
     this.selected_bt_name : this.selected_wifi);
     await this.storage.set('globalConnectedDevice', this.connectionMode == 'bluetooth' ? 
-      this.selected_bt : this.selected_wifi);
+      this.selected_bt_id : this.selected_wifi);
     // var tab = this.iab.create('http://10.0.1.1/wifi','_slef','location=no,toolbar=no');
     // tab.on('loadstop').subscribe(e=>{
     //   if(e.url.indexOf('wifisave') != -1)

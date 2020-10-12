@@ -188,9 +188,9 @@ export class Tab2Page {
     if(this.clockCheck) clearInterval(this.clockCheck);
   }
 
-  async showLoader() {
+  async showLoader(message = null) {
     const loading = await this.loadingController.create({
-      message: 'Warten Sie mal...'
+      message: message ? message : 'Warten Sie mal...'
     });
     await loading.present();
   }
@@ -280,6 +280,7 @@ export class Tab2Page {
               dateObj.setSeconds(second);
               me.datetimertc = dateObj;
               me.bt_data_initialized = true;
+              this.hideLoader();
               break;
           }
         });
@@ -290,6 +291,7 @@ export class Tab2Page {
     }
     
     const writedata = me.stringToBytes('setting\n');
+    this.showLoader('Einstellungen erfassen...');
     ble.write(device_id, service_id, charac_id, writedata, () => {
       console.log('BT Successfully sent request settings command.');
     }, (error) => {
