@@ -46,13 +46,13 @@ unsigned long int Clockpublish_Interval = 30000;
 #define DHTTYPE DHT11   // DHT 11
 
 // DHT Sensor
-uint8_t DHTPin = 4;   //  DHT11 PIN TEMPRATURE and Humidity
+uint8_t DHTPin = 2;   //  DHT11 PIN TEMPRATURE and Humidity
 
 // Initialize DHT sensor.
 DHT dht(DHTPin, DHTTYPE);
 
 //Initialize DS18B20 Sensor
-#define ONE_WIRE_BUS 8
+#define ONE_WIRE_BUS 14
 
 OneWire oneWire(ONE_WIRE_BUS);
 DS18B20 ds18b20(&oneWire);
@@ -78,8 +78,8 @@ String ssid = "SmartGarden_" + String(ESP_getChipId(), HEX);   /// ADD YOUR SSID
 String Router_SSID;
 String Router_Pass;
 
-const int trigPin = 5;
-const int echoPin = 18;
+const int trigPin = 33;
+const int echoPin = 32;
 
 #define RXD2 16
 #define TXD2 17
@@ -92,6 +92,12 @@ int fan_1 = 33;   //
 int fan_2 = 32;  //
 int pump1 = 23;  //
 
+int light_1 = 13;  //
+int light_2 = 12;  //
+int light_3 = 37;  //     RELAY CONNECTION FOR LILY TTGO
+int fan_1 = 27;   //
+int fan_2 = 38;  //
+int pump1 = 23;  //
 
 
 // PH connections
