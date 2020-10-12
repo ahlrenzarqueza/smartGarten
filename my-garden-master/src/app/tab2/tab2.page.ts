@@ -85,6 +85,7 @@ export class Tab2Page {
   async ionViewDidEnter()
   {
     const me = this;
+    this.initializedSetting = {};
     this.activeConnectionMode = await this.storage.get('globalConnectionMode');
     this.activeDeviceName = await this.storage.get('globalConnectedDevName');
     this.activeDevice = await this.storage.get('globalConnectedDevice');
@@ -737,7 +738,7 @@ export class Tab2Page {
       shadowName: 'Settings'
     };
     let checkFunction = function () {
-      if(this.activeConnectionMode == "wifi") {
+      if(me.activeConnectionMode == "wifi") {
         me.awsiotdata.getThingShadow(params, function(err, data) {
           if (err) {
             console.log('AWS IOT Connection Error:', err);
