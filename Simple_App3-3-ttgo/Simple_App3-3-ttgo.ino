@@ -85,12 +85,12 @@ const int echoPin = 32;
 #define TXD2 17
 
 
-int light_1 = 27;  //
-int light_2 = 26;  //
-int light_3 = 25; //     RELAY CONNECTION
-int fan_1 = 33;   //
-int fan_2 = 32;  //
-int pump1 = 23;  //
+//int light_1 = 27;  //
+//int light_2 = 26;  //
+//int light_3 = 25; //     RELAY CONNECTION
+//int fan_1 = 33;   //
+//int fan_2 = 32;  //
+//int pump1 = 23;  //
 
 int light_1 = 13;  //
 int light_2 = 12;  //
@@ -242,8 +242,8 @@ void bt_messageHandler() {
   char endMarker = '\n';
   char rc;
  
-  while (Serial.available() > 0 && btnewData == false) {
-      rc = Serial.read();
+  while (Serial2.available() > 0 && btnewData == false) {
+      rc = Serial2.read();
 
       if (rc != endMarker) {
           btreceivedChars[ndx] = rc;

@@ -236,8 +236,8 @@ void bt_messageHandler() {
   char endMarker = '\n';
   char rc;
  
-  while (Serial.available() > 0 && btnewData == false) {
-      rc = Serial.read();
+  while (Serial2.available() > 0 && btnewData == false) {
+      rc = Serial2.read();
 
       if (rc != endMarker) {
           btreceivedChars[ndx] = rc;
