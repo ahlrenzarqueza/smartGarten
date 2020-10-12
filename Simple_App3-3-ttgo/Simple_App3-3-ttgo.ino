@@ -297,7 +297,7 @@ void bt_messageHandler() {
         fssstr = fssstr + "," + String(fansunSetHour) + "," + String(fansunSetMin);
         Serial2.println(fssstr);
         delay(500);
-        pssstr = "fss=" + String(pumpsunRiseHour) + "," + String(pumpsunRiseMin);
+        pssstr = "pss=" + String(pumpsunRiseHour) + "," + String(pumpsunRiseMin);
         pssstr = pssstr + "," + String(pumpsunSetHour) + "," + String(pumpsunSetMin);
         Serial2.println(pssstr);
         delay(500);
@@ -620,7 +620,7 @@ void bt_setValue (char* setname, char* setvalue) {
     pumpsunRiseHour = atoi(setvalue);
   }
   else if(strcmp(setname, "psshr") == 0) {
-    pumpsunRiseHour = atoi(setvalue);
+    pumpsunSetHour = atoi(setvalue);
   }
   else if(strcmp(setname, "srmm") == 0) {
     sunRiseMin = atoi(setvalue);
