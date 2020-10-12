@@ -724,6 +724,7 @@ void bt_setValue (char* setname, char* setvalue) {
   else if(strcmp(setname, "dow") == 0) {
     Clock.setDoW(atoi(setvalue));
   }
+  publishSettings();
 }
 
 void connectToWiFi()

@@ -299,6 +299,7 @@ void bt_messageHandler() {
         flpstr = flpstr + "," + String(light3 ? "1" : "0") + "," + String(fan1 ? "1" : "0");
         flpstr = flpstr + "," + String(fan2 ? "1" : "0") + "," + String(pump ? "1" : "0");
         flpstr = flpstr + "," + String(lightIntensity);
+        Serial.println("FLP BT Set : " + flpstr);
         Serial2.println(flpstr);
         delay(500);
 
@@ -718,6 +719,7 @@ void bt_setValue (char* setname, char* setvalue) {
   else if(strcmp(setname, "dow") == 0) {
     Clock.setDoW(atoi(setvalue));
   }
+  publishSettings();
 }
 
 void connectToWiFi()
