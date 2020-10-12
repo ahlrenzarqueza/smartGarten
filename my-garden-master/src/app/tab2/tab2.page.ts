@@ -596,6 +596,7 @@ export class Tab2Page {
   timerFunc(index:any)
   {
     // this.storage.get('timeToggle-'+index).then((currentState)=>{ 
+    this.zone.run( () => {
       let currentState = this.timeStatusArray[index];
       this.storage.set('timeToggle-'+index, !currentState);
       this.timeStatusArray[index] = !currentState;
@@ -605,7 +606,7 @@ export class Tab2Page {
         ['lt'+index]: !currentState
       };
       this.handleDataChangeApi(bt_set_obj);
-    // });
+    });
     
   }
 
@@ -656,7 +657,7 @@ export class Tab2Page {
 
   fanFunc(index:any)
   {
-    // this.storage.get('fanToggle-'+index).then((currentState)=>{ 
+    this.zone.run( () => {
       let currentState = this.fanStatusArray[index];
       this.storage.set('fanToggle-'+index, !currentState);
       this.fanStatusArray[index] = !currentState;
@@ -666,7 +667,7 @@ export class Tab2Page {
         ['ft'+index]: !currentState
       };
       this.handleDataChangeApi(bt_set_obj);
-    // });
+    });
   }
 
   lightSnoozeSet() {
