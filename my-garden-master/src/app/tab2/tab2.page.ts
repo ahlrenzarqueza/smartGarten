@@ -730,7 +730,6 @@ export class Tab2Page {
 
   fanOnTimerSet(event) {
     this.zone.run( () => {
-      this.fanOnTimer = event.detail.value;
       const bt_set_obj = {
         ['ftimer']: this.fanOnTimer
       };
