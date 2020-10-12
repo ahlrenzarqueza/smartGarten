@@ -50,6 +50,7 @@ export class Tab2Page {
   isOnWifiMode = true;
   bt_peripheral = null;
   pendingBtWritePrm = null;
+  pendingBtWrites = [];
   snoozeTimeCheck = null;
   clockCheck = null;
 
@@ -80,6 +81,7 @@ export class Tab2Page {
   wifi_ip = null;
   apiUrl: string;
   postJsonObj :any = {};
+  bt_data_initialized = false;
   initializedSetting = {};
 
   async ionViewDidEnter()
@@ -254,7 +256,7 @@ export class Tab2Page {
               me.fanStatusArray[1] = (ltsplitString[3] == '1' ? true : false);
               me.fanStatusArray[2] = (ltsplitString[4] == '1' ? true : false);
               me.pumpToggle = (ltsplitString[5] == '1' ? true : false);
-              me.lightIntensity = parseInt(ltsplitString[9]);
+              me.lightIntensity = parseInt(ltsplitString[6]);
               break;
             case "snt":
               const sntsplitString = keyval[1].split(',');
@@ -277,6 +279,7 @@ export class Tab2Page {
               dateObj.setMinutes(minute);
               dateObj.setSeconds(second);
               me.datetimertc = dateObj;
+              me.bt_data_initialized = true;
               break;
           }
         });
@@ -371,6 +374,7 @@ export class Tab2Page {
 
   writeObjToBt (device_id, service_id, charac_id, btdata) {
     const me = this;
+    if(!me.bt_data_initialized) return;
     var resolvePrm = null;
     this.pendingBtWritePrm = new Promise(function (resolve) {
       resolvePrm = resolve;
