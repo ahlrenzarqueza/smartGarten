@@ -9,7 +9,6 @@
 #include "DHT.h"
 
 #include <EEPROM.h>
-#include "GravityTDS.h"
 
 #include <WiFi.h>
 #include <WiFiClient.h>
@@ -46,7 +45,7 @@ unsigned long int Clockpublish_Interval = 30000;
 #define DHTTYPE DHT11   // DHT 11
 
 // DHT Sensor
-uint8_t DHTPin = 2;   //  DHT11 PIN TEMPRATURE and Humidity
+uint8_t DHTPin = 4;   //  DHT11 PIN TEMPRATURE and Humidity
 
 // Initialize DHT sensor.
 DHT dht(DHTPin, DHTTYPE);
@@ -60,7 +59,12 @@ DS18B20 ds18b20(&oneWire);
 
 //Initialize TDS Meter
 #define TdsSensorPin 39
-GravityTDS gravityTds;
+#define VREF 3.3 // analog reference voltage(Volt) of the ADC
+#define SCOUNT 30 // sum of sample point
+int analogBuffer[SCOUNT]; // store the analog value in the array, read from ADC
+int analogBufferTemp[SCOUNT];
+int analogBufferIndex = 0,copyIndex = 0;
+float averageVoltage = 0,tdsValue = 0,temperature = 25;
 
 //Initialize LED Driver
 #include <RBDdimmer.h>
@@ -78,8 +82,11 @@ String ssid = "SmartGarden_" + String(ESP_getChipId(), HEX);   /// ADD YOUR SSID
 String Router_SSID;
 String Router_Pass;
 
-const int trigPin = 33;
-const int echoPin = 32;
+//Water Level Sensors
+#include<UltraDistSensor.h>
+UltraDistSensor ultrasensor1;
+const int trigPin = 18;
+const int echoPin = 5;
 
 #define RXD2 16
 #define TXD2 17
@@ -94,9 +101,9 @@ const int echoPin = 32;
 
 int light_1 = 13;  //
 int light_2 = 12;  //
-int light_3 = 37;  //     RELAY CONNECTION FOR LILY TTGO
+int light_3 = 19;  //     RELAY CONNECTION FOR LILY TTGO
 int fan_1 = 27;   //
-int fan_2 = 38;  //
+int fan_2 = 26;  //
 int pump1 = 23;  //
 
 
@@ -129,7 +136,6 @@ String flpstr;
 String sntstr;
 
 float Temperature_DS18B20;
-float tdsValue;
 
 // Date Time RTC
 String datetimertc = "0000000000000";
@@ -272,15 +278,16 @@ void bt_messageHandler() {
         Serial2.println(atstr); 
         delay(500);
         PHValue = getPhValue();
-        phstr = "at=" + String(PHValue);
+        phstr = "ph=" + String(PHValue);
         Serial2.println(phstr);
         delay(500);
-        gravityTds.setTemperature(Temperature_DS18B20);  // set the temperature and execute temperature compensation
-        gravityTds.update();  //sample and calculate
-        tdsValue = gravityTds.getTdsValue();  // then get the value
+//        gravityTds.setTemperature(Temperature_DS18B20);  // set the temperature and execute temperature compensation
+//        gravityTds.update();  //sample and calculate
+//        tdsValue = gravityTds.getTdsValue();  // then get the value
         ecstr = "ec=" + String(tdsValue);
         Serial2.println(ecstr);
         delay(500);
+        SensorValueCM=getDistance();
         Waterlevel = (1 - (SensorValueCM - SensorSafetyDistance) / (SensorHeight - SensorSafetyDistance)) * 100;
         wlstr = "wl=" + String(Waterlevel);
         Serial2.println(wlstr);
@@ -825,16 +832,18 @@ void publishMessage()
   Temperature = dht.readTemperature(); // Gets the values of the temperature
   Humidity = dht.readHumidity(); // Gets the values of the humidity
   SensorValueCM=getDistance();
+  Serial.print("US Sensor Distance: ");
+  Serial.println(SensorValueCM);
   Waterlevel=(1-(SensorValueCM-SensorSafetyDistance)/(SensorHeight-SensorSafetyDistance))*100;
   PHValue=getPhValue();
 
-  ds18b20.requestTemperatures();
-  while (!ds18b20.isConversionComplete());  // wait until sensor is ready
-  Temperature_DS18B20 = ds18b20.getTempC();
+//  ds18b20.requestTemperatures();
+//  while (!ds18b20.isConversionComplete());  // wait until sensor is ready
+//  Temperature_DS18B20 = ds18b20.getTempC();
 
-  gravityTds.setTemperature(Temperature_DS18B20);  // set the temperature and execute temperature compensation
-  gravityTds.update();  //sample and calculate 
-  tdsValue = gravityTds.getTdsValue();  // then get the value
+//  gravityTds.setTemperature(Temperature_DS18B20);  // set the temperature and execute temperature compensation
+//  gravityTds.update();  //sample and calculate 
+//  tdsValue = gravityTds.getTdsValue();  // then get the value
 
   reportedObj["humidity"] = Humidity,
   reportedObj["waterTemperature"] = Temperature_DS18B20;
@@ -991,23 +1000,40 @@ void publishRTC()
   client.publish(AWS_IOT_PUBCLOCK_TOPIC, jsonBuffer);
 }
 
-int getDistance(){
-  long duration,distance = 0;
-  digitalWrite(trigPin, LOW);
-  delayMicroseconds(2);
-  
-  // Sets the trigPin on HIGH state for 10 micro seconds
-  digitalWrite(trigPin, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigPin, LOW);
-  
-  // Reads the echoPin, returns the sound wave travel time in microseconds
-  duration = pulseIn(echoPin, HIGH);
-  
-  // Calculating the distance
-  distance= duration*0.034/2;
-  return distance;
+float getDistance(){
+  return ultrasensor1.distanceInCm();
 }
+
+float getEcValue() {
+  static unsigned long analogSampleTimepoint = millis();
+  if(millis()-analogSampleTimepoint > 40U) //every 40 milliseconds,read the analog value from the ADC
+  {
+    analogSampleTimepoint = millis();
+    analogBuffer[analogBufferIndex] = analogRead(TdsSensorPin); //read the analog value and store into the buffer
+    analogBufferIndex++;
+    if(analogBufferIndex == SCOUNT)
+    analogBufferIndex = 0;
+  }
+  static unsigned long printTimepoint = millis();
+  if(millis()-printTimepoint > 800U)
+  {
+    printTimepoint = millis();
+    ds18b20.requestTemperatures();
+    while (!ds18b20.isConversionComplete());  // wait until sensor is ready
+    Temperature_DS18B20 = ds18b20.getTempC();
+    for(copyIndex=0;copyIndex<SCOUNT;copyIndex++)
+    analogBufferTemp[copyIndex]= analogBuffer[copyIndex];
+    averageVoltage = getMedianNum(analogBufferTemp,SCOUNT) * (float)VREF/ 4096.0; // read the analog value more stable by the median filtering algorithm, and convert to voltage value
+    float compensationCoefficient=1.0+0.02*(Temperature_DS18B20-25.0); //temperature compensation formula: fFinalResult(25^C) = fFinalResult(current)/(1.0+0.02*(fTP-25.0));
+    float compensationVolatge=averageVoltage/compensationCoefficient; //temperature compensation
+    tdsValue=(133.42*compensationVolatge*compensationVolatge*compensationVolatge - 255.86*compensationVolatge*compensationVolatge + 857.39*compensationVolatge)*0.5; //convert voltage value to tds value
+    tdsValue = (tdsValue * 2) / 1000;
+    Serial.print("TDS Value: ");
+    Serial.print(tdsValue,0);
+    Serial.println("ppm");
+  }
+}
+
 void setup() {
 
   pinMode(PIN_LED, OUTPUT);
@@ -1016,8 +1042,7 @@ void setup() {
   
   Serial2.begin(9600, SERIAL_8N1, RXD2, TXD2);
 
-  pinMode(trigPin,OUTPUT);
-  pinMode(echoPin,INPUT);
+  ultrasensor1.attach(trigPin, echoPin);
   unsigned long startedAt = millis();
 
   delay(100);
@@ -1035,10 +1060,7 @@ void setup() {
   dht.begin();
   ds18b20.begin();
 
-  gravityTds.setPin(TdsSensorPin);
-  gravityTds.setAref(3.3);  //reference voltage on ADC, default 5.0V on Arduino UNO
-  gravityTds.setAdcRange(1024);  //1024 for 10bit ADC;4096 for 12bit ADC
-  gravityTds.begin();
+  pinMode(TdsSensorPin,INPUT); // TDS Sensor Pin Input
 
   dimmer.begin(NORMAL_MODE, ON); //dimmer initialisation: name.begin(MODE, STATE)
 
@@ -1051,6 +1073,7 @@ void setup() {
 void loop() {
 
   getTime();
+  getEcValue();
   executeFanTimer();
   executePump();
   executeLights();
@@ -1388,4 +1411,29 @@ void getTime() {
   Serial.print('\n');
   Serial.print('\n');
   delay(1000);
+}
+
+int getMedianNum(int bArray[], int iFilterLen)
+{
+  int bTab[iFilterLen];
+  for (byte i = 0; i<iFilterLen; i++)
+    bTab[i] = bArray[i];
+  int i, j, bTemp;
+  for (j = 0; j < iFilterLen - 1; j++)
+  {
+    for (i = 0; i < iFilterLen - j - 1; i++)
+    {
+      if (bTab[i] > bTab[i + 1])
+      {
+        bTemp = bTab[i];
+        bTab[i] = bTab[i + 1];
+        bTab[i + 1] = bTemp;
+      }
+    }
+  }
+  if ((iFilterLen & 1) > 0)
+    bTemp = bTab[(iFilterLen - 1) / 2];
+  else
+    bTemp = (bTab[iFilterLen / 2] + bTab[iFilterLen / 2 - 1]) / 2;
+  return bTemp;
 }
