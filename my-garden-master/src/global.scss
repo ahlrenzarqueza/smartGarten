@@ -265,9 +265,10 @@ ion-select {
 }
 
 ion-toast {
-    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    font-family: 'Helvetica', 'Arial Narrow', Arial, 'Franklin Gothic Medium', sans-serif;
     --background: #b58924;
     --button-color: white;
+    --color: white;
 }
 
 ion-toast::part(header) {

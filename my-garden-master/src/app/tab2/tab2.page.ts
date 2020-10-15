@@ -542,7 +542,7 @@ export class Tab2Page {
           counter++;
         }
       }
-      if(counter === 1){
+      if(counter > 0){
         this.timeToggle = true;
       }else if(counter === 0){
         this.timeToggle = false;
@@ -559,7 +559,7 @@ export class Tab2Page {
           counter++;
         }
       }
-      if(counter === 2){
+      if(counter > 0){
         this.fanToggle = true;
       }else if(counter === 0){
         this.fanToggle = false;
@@ -579,7 +579,10 @@ export class Tab2Page {
         this.postJsonObj["fan"+i] = this.fanToggle;
         bt_set_obj['ft'+i] = this.fanToggle;
       }
-      // alert(this.timeToggle);
+      if(this.fanToggle) {
+        this.fanSnooze = false;
+        bt_set_obj['fs'] = false;
+      }
       this.handleDataChangeApi(bt_set_obj);
     });
 
@@ -594,13 +597,16 @@ export class Tab2Page {
       const bt_set_obj = {
         pt: this.pumpToggle
       };
+      if(this.pumpToggle) {
+        this.pumpSnooze = false;
+        bt_set_obj['ps'] = false;
+      }
       this.handleDataChangeApi(bt_set_obj);
     });
   }
 
   timerFunc(index:any)
   {
-    // this.storage.get('timeToggle-'+index).then((currentState)=>{ 
     this.zone.run( () => {
       let currentState = this.timeStatusArray[index];
       this.storage.set('timeToggle-'+index, !currentState);
@@ -610,6 +616,10 @@ export class Tab2Page {
       const bt_set_obj = {
         ['lt'+index]: !currentState
       };
+      if(this.timeToggle) {
+        this.lightSnooze = false;
+        bt_set_obj['ls'] = false;
+      }
       this.handleDataChangeApi(bt_set_obj);
     });
     
@@ -669,8 +679,12 @@ export class Tab2Page {
       this.postJsonObj["fan"+index] = !currentState;
       this.checkFanTimer();
       const bt_set_obj = {
-        ['ft'+index]: !currentState
+        ['ft'+index]: !currentState,
       };
+      if(this.fanToggle) {
+        this.fanSnooze = false;
+        bt_set_obj['fs'] = false;
+      }
       this.handleDataChangeApi(bt_set_obj);
     });
   }

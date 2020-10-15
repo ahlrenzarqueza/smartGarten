@@ -13,13 +13,14 @@ import { AlertController, ActionSheetController, ToastController } from "@ionic/
 import * as AWS from 'aws-sdk';
 import creds from '../../assets/env.json';
 
-declare var WifiWizard2: any, ble: any;
+declare var ble: any;
 
 @Component({
   selector: 'app-tab1',
   templateUrl: 'tab1.page.html',
   styleUrls: ['tab1.page.scss']
 })
+
 export class Tab1Page {
   public get tabs(): TabsPageModule {
     return this._tabs;
@@ -44,29 +45,32 @@ export class Tab1Page {
   ) {
 
   }
-  awsiotdata:any = null;
-  awsiotEndpoint = null;
-  activeDevice = null;
-  activeDeviceName = null;
-  activeConnectionMode = 'wifi';
-  wifi_ip = null;
-  apiUrl;
-  bt_peripheral = null;
-  bt_notif_initialized = false;
-  toastDismissSnooze = false;
-  gardenNameSettings:any = {};
+  awsiotdata:any = null; // AWS SDK IoT Data Class
+  awsiotEndpoint = null;  // AWS IoT Thing Base Endpoint
 
-  toastInstances = [];
-  airtemp = 0;
-  watertemp = 0;
-  humid = 0;
-  waterlevel = 0;
-  phValue = 7;
-  ecValue = 0;
+  activeDevice = null; // Active Device ID (Garden IoT Thing Name || Bluetooth device MAC Address)
+  activeDeviceName = null; // Active Device Name (Garden IoT Thing Name || Bluetooth device Name)
+  activeConnectionMode = 'wifi'; // Active Connection Mode
+  bt_peripheral = null; // Active Bluetooth Peripheral Object (from successful connection)
+  bt_notif_initialized:boolean = false; // Bluetooth Notification Subscription is Initialized (Boolean)
+  
+  toastDismissSnooze:boolean = false; // Toast Dismiss Snooze (if true, toast warnings will be disabled temporarily)
+  
+  gardenNameSettings:any = {}; // Garden Name Settings (that is being saved in storage)
+
+  toastInstances = {};
+  airtemp = 0; // Air Temperature Measurement Value
+  watertemp = 0; // Water Temperature Measurement Value
+  humid = 0; // Humidity Measurement Value
+  waterlevel = 0; // Water Level (distance) Measurement Value
+  phValue = 7; // pH Level Measurement Value
+  ecValue = 0; // TDS EC Measurement Value
 
   ionViewDidLeave() {
-    clearInterval(this.loopResult);
+    clearInterval(this.loopResultInterval);
+
     if(!this.bt_peripheral) return;
+    // Unsubscribe to Bluetooth notification
     const {id : device_id} = this.bt_peripheral;
     const charObj = this.bt_peripheral.characteristics.find(function (e) {
       return e.characteristic == "FFE1";
@@ -80,8 +84,10 @@ export class Tab1Page {
   }
 
   ngOnDestroy() {
-    clearInterval(this.loopResult);
+    clearInterval(this.loopResultInterval);
+    
     if(!this.bt_peripheral) return;
+    // Unsubscribe to Bluetooth notification
     const {id : device_id} = this.bt_peripheral;
     const charObj = this.bt_peripheral.characteristics.find(function (e) {
       return e.characteristic == "FFE1";
@@ -96,8 +102,8 @@ export class Tab1Page {
 
   async ionViewWillEnter() {
 
-    if (this.loopResult != null) {
-      clearInterval(this.loopResult);
+    if (this.loopResultInterval != null) {
+      clearInterval(this.loopResultInterval);
     }
 
     this.activeConnectionMode = await this.storage.get('globalConnectionMode');
@@ -118,6 +124,7 @@ export class Tab1Page {
     this.loopGetResults();
   }
 
+  // Function that gets Measurement values
   async getResults() {
     const me = this;
     if(this.activeConnectionMode == 'wifi') {
@@ -197,10 +204,11 @@ export class Tab1Page {
     }
   }
 
-  loopResult;
+  // Function to instantiate interval to poll for measurement results
+  loopResultInterval;
   async loopGetResults() {
     const interval = this.activeConnectionMode == 'wifi' ? 5000 : 10000;
-    this.loopResult = setInterval(() => { this.getResults(); }, interval);
+    this.loopResultInterval = setInterval(() => { this.getResults(); }, interval);
   }
 
   checkWarningTriggers() {
