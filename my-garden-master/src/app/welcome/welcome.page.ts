@@ -26,7 +26,7 @@ export class WelcomePage implements OnInit {
   awsiotEndpoint:string; // AWS IoT Thing Base Endpoint
   awsiot:any; // AWS SDK IoT Class
   awsiotdata:any; // AWS SDK IoT Data Class
-  awsiotListApi:any = 'https://1ki06byvn9.execute-api.ap-southeast-1.amazonaws.com/live/'; // AWS API Gateway for List Things
+  awsiotListApi:any = 'https://g8s2hbjvd5.execute-api.ap-southeast-1.amazonaws.com/smartGartenAPI/'; // AWS API Gateway for List Things
   
   subscription: any;
 

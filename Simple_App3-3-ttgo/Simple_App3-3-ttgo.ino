@@ -1,6 +1,3 @@
-// ID of Garden Device Name in AWS IoT
-#define AWS_IOT_ID "Test-Arduino-Garden"
-
 #include <ArduinoJson.h>
 
 #include <OneWire.h>
@@ -23,11 +20,11 @@
 #include <MQTTClient.h>
 
 // The MQTT topics that this device should publish/subscribe
-String AWS_IOT_PUBLISH_TOPIC = "$aws/things/" + String(AWS_IOT_ID) + "/shadow/name/Measurements/update";
-String AWS_IOT_PUBSETTING_TOPIC = "$aws/things/" + String(AWS_IOT_ID) + "/shadow/name/Settings/update";
-String AWS_IOT_PUBCLOCK_TOPIC = "$aws/things/" + String(AWS_IOT_ID) + "/shadow/name/Clock/update";
-String AWS_IOT_SUBSCRIBE_TOPIC = "$aws/things/" + String(AWS_IOT_ID) + "/shadow/name/Settings/update/delta";
-String AWS_IOT_SUBCLOCK_TOPIC = "$aws/things/" + String(AWS_IOT_ID) + "/shadow/name/Clock/update/delta";
+String AWS_IOT_PUBLISH_TOPIC = "$aws/things/" + String(THINGNAME) + "/shadow/name/Measurements/update";
+String AWS_IOT_PUBSETTING_TOPIC = "$aws/things/" + String(THINGNAME) + "/shadow/name/Settings/update";
+String AWS_IOT_PUBCLOCK_TOPIC = "$aws/things/" + String(THINGNAME) + "/shadow/name/Clock/update";
+String AWS_IOT_SUBSCRIBE_TOPIC = "$aws/things/" + String(THINGNAME) + "/shadow/name/Settings/update/delta";
+String AWS_IOT_SUBCLOCK_TOPIC = "$aws/things/" + String(THINGNAME) + "/shadow/name/Clock/update/delta";
 
 boolean OnPubSettingCycle = false;
 boolean OnPubClockCycle = false;
@@ -144,7 +141,7 @@ bool fan2 = true;
 int fanTime = 60;
 
 bool pump = true;
-int pumpTime = 0;
+int pumpTime = 60;
 
 int lightSnoozeTime = -1;
 int fanSnoozeTime = -1;
