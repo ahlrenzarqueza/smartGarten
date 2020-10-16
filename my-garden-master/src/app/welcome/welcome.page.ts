@@ -356,6 +356,10 @@ export class WelcomePage implements OnInit {
           name: me.gardenNameSettings[result],
           id: result
         }
+      }).sort((a,b) => {
+        let aname = a.name || a.id;
+        let bname = b.name || b.id;
+        return aname.localeCompare(bname);
       });
     } catch (error) {
         this.errorHandler(error);
