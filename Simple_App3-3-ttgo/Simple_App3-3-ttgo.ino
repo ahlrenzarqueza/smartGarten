@@ -91,14 +91,6 @@ const int echoPin = 5;
 #define RXD2 16
 #define TXD2 17
 
-
-//int light_1 = 27;  //
-//int light_2 = 26;  //
-//int light_3 = 25; //     RELAY CONNECTION
-//int fan_1 = 33;   //
-//int fan_2 = 32;  //
-//int pump1 = 23;  //
-
 int light_1 = 13;  //
 int light_2 = 12;  //
 int light_3 = 19;  //     RELAY CONNECTION FOR LILY TTGO
@@ -147,36 +139,36 @@ bool PM;
 byte ADay, AHour, AMinute, ASecond, ABits;
 bool ADy, A12h, Apm;
 
-bool fan1 = false;
-bool fan2 = false;
-int fanTime = 0;
+bool fan1 = true;
+bool fan2 = true;
+int fanTime = 60;
 
-bool pump = false;
+bool pump = true;
 int pumpTime = 0;
 
 int lightSnoozeTime = -1;
 int fanSnoozeTime = -1;
 int pumpSnoozeTime = -1;
 
-bool light1 = false;
-bool light2 = false;
-bool light3 = false;
-int sunRiseHour = 0;
+bool light1 = true;
+bool light2 = true;
+bool light3 = true;
+int sunRiseHour = 7;
 int sunRiseMin = 0;
-int sunSetHour = 0;
+int sunSetHour = 22;
 int sunSetMin = 0;
 
 int fansunRiseHour = 0;
 int fansunRiseMin = 0;
-int fansunSetHour = 0;
-int fansunSetMin = 0;
+int fansunSetHour = 23;
+int fansunSetMin = 59;
 
 int pumpsunRiseHour = 0;
 int pumpsunRiseMin = 0;
-int pumpsunSetHour = 0;
-int pumpsunSetMin = 0;
+int pumpsunSetHour = 23;
+int pumpsunSetMin = 59;
 
-int lightIntensity = 0;
+int lightIntensity = 100;
 
 // Bluetooth array store
 const byte btnumChars = 32;

@@ -280,7 +280,8 @@ export class Tab2Page {
               dateObj.setSeconds(second);
               me.datetimertc = dateObj;
               me.bt_data_initialized = true;
-              this.hideLoader();
+              me.btClearTimeout();
+              me.hideLoader();
               break;
           }
         });
@@ -293,9 +294,12 @@ export class Tab2Page {
     const writedata = me.stringToBytes('setting\n');
     this.showLoader('Einstellungen erfassen...');
     ble.write(device_id, service_id, charac_id, writedata, () => {
+      me.btInitTimeout();
       console.log('BT Successfully sent request settings command.');
-    }, (error) => {
+    }, async (error) => {
       console.log('BT Failed to send request settings command.');
+      await me.presentAlert("Bluetooth communication error", "Error");
+      me.router.navigateByUrl('welcome');
     });
   }
 
@@ -885,22 +889,6 @@ export class Tab2Page {
     }, 30000);
   }
 
-  redirect() {
-    // CHANGE THE LINK BELOW TO REDIRECT USER TO COMPANY WEBSITE
-    this.iab.create('https://www.simpleplant.de/', '_self');
-  }
-
-  facebook() {
-    // CHANGE THE LINK BELOW TO YOUR FACEBOOK HOME PAGE URL
-    this.iab.create('https://m.facebook.com', '_self');
-  }
-
-
-  instagram() {
-        // CHANGE THE LINK BELOW TO YOUR INSTAGRAM HOME PAGE URL
-    this.iab.create('https://instagram.com', '_self');
-  }
-
   stringToBytes(string) {
     var array = new Uint8Array(string.length);
     for (var i = 0, l = string.length; i < l; i++) {
@@ -918,6 +906,21 @@ export class Tab2Page {
     });
 
     await alert.present();
+    return alert.onDidDismiss();
+  }
+
+  // Bluetooth Timemout Mechanism : 
+  // To display error and reset to welcome page when BT communication timed out
+  btTimeout;
+  async btInitTimeout () {
+    this.btTimeout = setTimeout(async () => {
+      await this.presentAlert("Bluetooth communication timeout", "Error");
+      this.router.navigateByUrl('welcome');
+    }, 12000);
+  }
+
+  async btClearTimeout () {
+    clearTimeout(this.btTimeout);
   }
 
 }

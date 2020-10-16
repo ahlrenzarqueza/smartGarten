@@ -55,7 +55,6 @@ export class Tab1Page {
   bt_notif_initialized:boolean = false; // Bluetooth Notification Subscription is Initialized (Boolean)
   
   toastDismissSnooze:boolean = false; // Toast Dismiss Snooze (if true, toast warnings will be disabled temporarily)
-  
   gardenNameSettings:any = {}; // Garden Name Settings (that is being saved in storage)
 
   toastInstances = {};
@@ -185,6 +184,7 @@ export class Tab1Page {
                 break;
               case "wt": 
                 me.watertemp = me.parseToFloatTwoFixed(keyval[1]);
+                me.btClearTimeout();
                 break;
             }
             me.checkWarningTriggers();
@@ -197,9 +197,12 @@ export class Tab1Page {
       
       const writedata = me.stringToBytes('pollmeasure\n');
       ble.write(device_id, service_id, charac_id, writedata, () => {
+        me.btInitTimeout();
         console.log('BT Successfully sent poll command.');
-      }, (error) => {
+      }, async (error) => {
         console.log('BT Failed to send poll command.');
+        await me.presentAlert("Bluetooth communication error", "Error");
+        me.router.navigateByUrl('welcome');
       });
     }
   }
@@ -379,6 +382,20 @@ export class Tab1Page {
     });
     toast.present();
     this.toastInstances[toastid] = toast;
+  }
+
+  // Bluetooth Timemout Mechanism : 
+  // To display error and reset to welcome page when BT communication timed out
+  btTimeout;
+  async btInitTimeout () {
+    this.btTimeout = setTimeout(async () => {
+      await this.presentAlert("Bluetooth communication timeout", "Error");
+      this.router.navigateByUrl('welcome');
+    }, 12000);
+  }
+
+  async btClearTimeout () {
+    clearTimeout(this.btTimeout);
   }
 
   parseToFloatTwoFixed(str) {
