@@ -51,7 +51,7 @@ uint8_t DHTPin = 4;   //  DHT11 PIN TEMPRATURE and Humidity
 DHT dht(DHTPin, DHTTYPE);
 
 //Initialize DS18B20 Sensor
-#define ONE_WIRE_BUS 8
+#define ONE_WIRE_BUS 14
 
 OneWire oneWire(ONE_WIRE_BUS);
 DS18B20 ds18b20(&oneWire);
@@ -85,17 +85,25 @@ String Router_Pass;
 //Water Level Sensors
 #include<UltraDistSensor.h>
 UltraDistSensor ultrasensor1;
-const int trigPin = 5;
-const int echoPin = 18;
+const int trigPin = 18;
+const int echoPin = 5;
 
 #define RXD2 16
 #define TXD2 17
 
-int light_1 = 27;  //
-int light_2 = 26;  //
-int light_3 = 25;  //     RELAY CONNECTION FOR LILY TTGO
-int fan_1 = 33;   //
-int fan_2 = 32;  //
+
+//int light_1 = 27;  //
+//int light_2 = 26;  //
+//int light_3 = 25; //     RELAY CONNECTION
+//int fan_1 = 33;   //
+//int fan_2 = 32;  //
+//int pump1 = 23;  //
+
+int light_1 = 13;  //
+int light_2 = 12;  //
+int light_3 = 19;  //     RELAY CONNECTION FOR LILY TTGO
+int fan_1 = 27;   //
+int fan_2 = 26;  //
 int pump1 = 23;  //
 
 
@@ -139,36 +147,36 @@ bool PM;
 byte ADay, AHour, AMinute, ASecond, ABits;
 bool ADy, A12h, Apm;
 
-bool fan1 = true;
-bool fan2 = true;
-int fanTime = 60;
+bool fan1 = false;
+bool fan2 = false;
+int fanTime = 0;
 
-bool pump = true;
+bool pump = false;
 int pumpTime = 0;
 
 int lightSnoozeTime = -1;
 int fanSnoozeTime = -1;
 int pumpSnoozeTime = -1;
 
-bool light1 = true;
-bool light2 = true;
-bool light3 = true;
-int sunRiseHour = 7;
+bool light1 = false;
+bool light2 = false;
+bool light3 = false;
+int sunRiseHour = 0;
 int sunRiseMin = 0;
-int sunSetHour = 22;
+int sunSetHour = 0;
 int sunSetMin = 0;
 
 int fansunRiseHour = 0;
 int fansunRiseMin = 0;
-int fansunSetHour = 23;
-int fansunSetMin = 59;
+int fansunSetHour = 0;
+int fansunSetMin = 0;
 
 int pumpsunRiseHour = 0;
 int pumpsunRiseMin = 0;
-int pumpsunSetHour = 23;
-int pumpsunSetMin = 59;
+int pumpsunSetHour = 0;
+int pumpsunSetMin = 0;
 
-int lightIntensity = 100;
+int lightIntensity = 0;
 
 // Bluetooth array store
 const byte btnumChars = 32;
@@ -947,7 +955,7 @@ void publishSettings()
   Serial.print("Publish Message: ");
   Serial.println(jsonBuffer);
   Serial.print("Publishing Settings to IoT Topic: ");
-  Serial.println(AWS_IOT_PUBSETTING_TOPIC);
+  Serial.println(AWS_IOT_PUBLISH_TOPIC);
   OnPubSettingCycle = true;
   client.publish(AWS_IOT_PUBSETTING_TOPIC, jsonBuffer);
 }

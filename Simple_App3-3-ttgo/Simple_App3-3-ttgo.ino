@@ -947,7 +947,7 @@ void publishSettings()
   Serial.print("Publish Message: ");
   Serial.println(jsonBuffer);
   Serial.print("Publishing Settings to IoT Topic: ");
-  Serial.println(AWS_IOT_PUBLISH_TOPIC);
+  Serial.println(AWS_IOT_PUBSETTING_TOPIC);
   OnPubSettingCycle = true;
   client.publish(AWS_IOT_PUBSETTING_TOPIC, jsonBuffer);
 }

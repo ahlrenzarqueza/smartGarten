@@ -120,10 +120,13 @@ export class Tab2Page {
           me.pumpOnTimer = state.reported.pumpOnTimer;
           me.fanStatusArray[1] = state.reported['fan1-enabled'];
           me.fanStatusArray[2] = state.reported['fan2-enabled'];
+          me.checkFanTimer();
+
           me.timeStatusArray[1] = state.reported['light1-enabled'];
           me.timeStatusArray[2] = state.reported['light2-enabled'];
           me.timeStatusArray[3] = state.reported['light3-enabled'];
-          console.log(me.timeStatusArray);
+          me.checkSunTimer();
+
           me.pumpToggle = state.reported['pump-enabled'];
           me.fanSnooze = state.reported['fanSnooze'] == false ? false : true;
           me.lightSnooze = state.reported['lightSnooze'] == false ? false : true;
@@ -253,8 +256,12 @@ export class Tab2Page {
               me.timeStatusArray[1] = (ltsplitString[0] == '1' ? true : false);
               me.timeStatusArray[2] = (ltsplitString[1] == '1' ? true : false);
               me.timeStatusArray[3] = (ltsplitString[2] == '1' ? true : false);
+              me.checkSunTimer();
+
               me.fanStatusArray[1] = (ltsplitString[3] == '1' ? true : false);
               me.fanStatusArray[2] = (ltsplitString[4] == '1' ? true : false);
+              me.checkFanTimer();
+              
               me.pumpToggle = (ltsplitString[5] == '1' ? true : false);
               me.lightIntensity = parseInt(ltsplitString[6]);
               break;
