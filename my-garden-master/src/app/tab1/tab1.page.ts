@@ -145,7 +145,8 @@ export class Tab1Page {
           me.airtemp = me.parseToFloatTwoFixed(state.reported.airTemperature);
           me.humid = me.parseToFloatTwoFixed(state.reported.humidity);
           me.phValue = me.parseToFloatTwoFixed(state.reported.phValue);
-          me.ecValue = (me.parseToFloatTwoFixed(state.reported.tdsValue) * 2) / 1000;
+          let ecValue = (state.reported.tdsValue * 2) / 1000;
+          me.ecValue = me.parseToFloatTwoFixed(ecValue);
           me.waterlevel = me.parseToFloatTwoFixed(state.reported.waterLevel);
           me.watertemp = me.parseToFloatTwoFixed(state.reported.waterTemperature);
           me.checkWarningTriggers();
@@ -391,7 +392,7 @@ export class Tab1Page {
     this.btTimeout = setTimeout(async () => {
       await this.presentAlert("Bluetooth communication timeout", "Error");
       this.router.navigateByUrl('welcome');
-    }, 12000);
+    }, 30000);
   }
 
   async btClearTimeout () {

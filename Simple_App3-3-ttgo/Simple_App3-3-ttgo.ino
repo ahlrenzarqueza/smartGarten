@@ -35,6 +35,8 @@ MQTTClient client = MQTTClient(2048);
 unsigned long int AWSpublish_Timer = 0;
 unsigned long int Clockpublish_Timer = 0;
 unsigned long int SnoozeMinute_Timer = 0;
+unsigned long int analogSampleTimepoint = 0;
+unsigned long int printTimepoint = 0;
 
 unsigned long int AWSPublish_Interval = 3000;
 unsigned long int Clockpublish_Interval = 30000;
@@ -89,10 +91,10 @@ const int echoPin = 5;
 #define TXD2 17
 
 int light_1 = 13;  //
-int light_2 = 12;  //
-int light_3 = 19;  //     RELAY CONNECTION FOR LILY TTGO
+int light_2 = 25;  //
+int light_3 = 15;  //     RELAY CONNECTION FOR LILY TTGO
 int fan_1 = 27;   //
-int fan_2 = 26;  //
+int fan_2 = 0;  //
 int pump1 = 23;  //
 
 
@@ -273,7 +275,8 @@ void bt_messageHandler() {
 //        gravityTds.setTemperature(Temperature_DS18B20);  // set the temperature and execute temperature compensation
 //        gravityTds.update();  //sample and calculate
 //        tdsValue = gravityTds.getTdsValue();  // then get the value
-        ecstr = "ec=" + String(tdsValue);
+        float ecValue = (tdsValue * 2) / 1000;
+        ecstr = "ec=" + String(ecValue);
         Serial2.println(ecstr);
         delay(500);
         SensorValueCM=getDistance();
@@ -826,9 +829,9 @@ void publishMessage()
   Waterlevel=(1-(SensorValueCM-SensorSafetyDistance)/(SensorHeight-SensorSafetyDistance))*100;
   PHValue=getPhValue();
 
-//  ds18b20.requestTemperatures();
-//  while (!ds18b20.isConversionComplete());  // wait until sensor is ready
-//  Temperature_DS18B20 = ds18b20.getTempC();
+  ds18b20.requestTemperatures();
+  while (!ds18b20.isConversionComplete());  // wait until sensor is ready
+  Temperature_DS18B20 = ds18b20.getTempC();
 
 //  gravityTds.setTemperature(Temperature_DS18B20);  // set the temperature and execute temperature compensation
 //  gravityTds.update();  //sample and calculate 
@@ -838,7 +841,7 @@ void publishMessage()
   reportedObj["waterTemperature"] = Temperature_DS18B20;
   reportedObj["airTemperature"] = Temperature;
   reportedObj["phValue"] = PHValue;
-  reportedObj["ecValue"] = tdsValue;
+  reportedObj["tdsValue"] = tdsValue;
   reportedObj["waterLevel"] = Waterlevel;
   reportedObj["distance"] = SensorValueCM;
   
@@ -993,8 +996,8 @@ float getDistance(){
   return ultrasensor1.distanceInCm();
 }
 
-float getEcValue() {
-  static unsigned long analogSampleTimepoint = millis();
+void getEcValue() {
+//  static unsigned long analogSampleTimepoint = millis();
   if(millis()-analogSampleTimepoint > 40U) //every 40 milliseconds,read the analog value from the ADC
   {
     analogSampleTimepoint = millis();
@@ -1003,20 +1006,20 @@ float getEcValue() {
     if(analogBufferIndex == SCOUNT)
     analogBufferIndex = 0;
   }
-  static unsigned long printTimepoint = millis();
+//  static unsigned long printTimepoint = millis();
   if(millis()-printTimepoint > 800U)
   {
     printTimepoint = millis();
-    ds18b20.requestTemperatures();
-    while (!ds18b20.isConversionComplete());  // wait until sensor is ready
-    Temperature_DS18B20 = ds18b20.getTempC();
     for(copyIndex=0;copyIndex<SCOUNT;copyIndex++)
     analogBufferTemp[copyIndex]= analogBuffer[copyIndex];
     averageVoltage = getMedianNum(analogBufferTemp,SCOUNT) * (float)VREF/ 4096.0; // read the analog value more stable by the median filtering algorithm, and convert to voltage value
     float compensationCoefficient=1.0+0.02*(Temperature_DS18B20-25.0); //temperature compensation formula: fFinalResult(25^C) = fFinalResult(current)/(1.0+0.02*(fTP-25.0));
     float compensationVolatge=averageVoltage/compensationCoefficient; //temperature compensation
     tdsValue=(133.42*compensationVolatge*compensationVolatge*compensationVolatge - 255.86*compensationVolatge*compensationVolatge + 857.39*compensationVolatge)*0.5; //convert voltage value to tds value
-    tdsValue = (tdsValue * 2) / 1000;
+    // tdsValue = (tdsValue * 2) / 1000;
+    Serial.print("TDS Ave Voltage:");
+    Serial.print(averageVoltage,2);
+    Serial.println("V ");
     Serial.print("TDS Value: ");
     Serial.print(tdsValue,0);
     Serial.println("ppm");

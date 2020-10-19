@@ -923,7 +923,7 @@ export class Tab2Page {
     this.btTimeout = setTimeout(async () => {
       await this.presentAlert("Bluetooth communication timeout", "Error");
       this.router.navigateByUrl('welcome');
-    }, 12000);
+    }, 30000);
   }
 
   async btClearTimeout () {
