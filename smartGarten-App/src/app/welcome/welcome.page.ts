@@ -164,6 +164,7 @@ export class WelcomePage implements OnInit {
       console.log('Connection to Wi-Fi log, Position: ', pos);
       if (pos) {
         this.wifiwizard2.getConnectedSSID().then( ssId => {
+          if(!ssId) throw 'No active Wi-Fi';
           console.log('Connected to Wi-Fi SSID', ssId);
           this.selected_local_device = ssId; 
           if(successCallback) successCallback.call(this);

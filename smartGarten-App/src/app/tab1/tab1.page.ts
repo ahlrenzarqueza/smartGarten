@@ -218,41 +218,41 @@ export class Tab1Page {
 
   checkWarningTriggers() {
     const me = this;
-    if(me.airtemp > 45) {
-      me.presentWarningToast("airtemp", "Threshold reached: Air Temperature is now at " + me.airtemp + "°C");
+    if(this.isMaxAirTemp(me.airtemp)) {
+      me.presentWarningToast("airtemp", "Obergrenze erreicht!\nLufttemperatur: " + me.airtemp + "°C");
     }
-    if(me.airtemp < 10) {
-      me.presentWarningToast("airtemp", "Threshold reached: Air Temperature is now at " + me.airtemp + "°C");
+    if(this.isMinAirTemp(me.airtemp)) {
+      me.presentWarningToast("airtemp", "Untergrenze erreicht!\nLufttemperatur: " + me.airtemp + "°C");
     }
-    if(me.humid > 65) {
-      me.presentWarningToast("humid", "High Humidity: Humidity is now at " + me.humid + "%");
+    if(this.isMaxHumid(me.humid)) {
+      me.presentWarningToast("humid", "Obergrenze erreicht!\nLuftfeuchtigkeit: " + me.humid + "%");
     }
-    if(me.humid < 30) {
-      me.presentWarningToast("humid", "Low Humidity: Humidity is now at " + me.humid + "%");
+    if(this.isMinHumid(me.humid)) {
+      me.presentWarningToast("humid", "Untergrenze erreicht!\nLuftfeuchtigkeit: " + me.humid + "%");
     }
-    if(me.phValue > 7) {
-      me.presentWarningToast("phValue", "High pH concentration: Now at " + me.phValue);
+    if(this.isMaxPhValue(me.phValue)) {
+      me.presentWarningToast("phValue", "Obergrenze erreicht!\npH-Wert: " + me.phValue);
     }
-    if(me.phValue < 5) {
-      me.presentWarningToast("phValue", "Low pH concentration: Now at " + me.phValue);
+    if(this.isMinPhValue(me.phValue)) {
+      me.presentWarningToast("phValue", "Untergrenze erreicht!\npH-Wert: " + me.phValue);
     }
-    if(me.ecValue > 2) {
-      me.presentWarningToast("ecValue", "High EC Value: Now at " + me.ecValue);
+    if(this.isMaxECValue(me.ecValue)) {
+      me.presentWarningToast("ecValue", "Obergrenze erreicht!\nEC-Wert: " + me.ecValue);
     }
-    if(me.ecValue < 0.5) {
-      me.presentWarningToast("ecValue", "High EC Value: Now at " + me.ecValue);
+    if(this.isMinECValue(me.ecValue)) {
+      me.presentWarningToast("ecValue", "Untergrenze erreicht!\nEC-Wert: " + me.ecValue);
     }
-    if(me.watertemp > 45) {
-      me.presentWarningToast("watertemp", "Max Threshold reached: Water Temperature is now at " + me.watertemp + "°C");
+    if(this.isMaxWaterTemp(me.watertemp)) {
+      me.presentWarningToast("watertemp", "Obergrenze erreicht!\nWassertemperatur: " + me.watertemp + "°C");
     }
-    if(me.watertemp < 10) {
-      me.presentWarningToast("watertemp", "Min Threshold reached: Water Temperature is now at " + me.watertemp + "°C");
+    if(this.isMinWaterTemp(me.watertemp)) {
+      me.presentWarningToast("watertemp", "Untergrenze erreicht!\nWassertemperatur: " + me.watertemp + "°C");
     }
-    if(me.waterlevel > 100) {
-      me.presentWarningToast("waterlevel", "Maximum Level threshold: Water Level is now at " + me.waterlevel + "%");
+    if(this.isMaxWaterLevel(me.waterlevel)) {
+      me.presentWarningToast("waterlevel", "Obergrenze erreicht!\nWasserstand: " + me.waterlevel + "%");
     }
-    if(me.waterlevel < 10) {
-      me.presentWarningToast("waterlevel", "Minimum Level threshold: Water Level is now at " + me.waterlevel + "%");
+    if(this.isMinWaterLevel(me.waterlevel)) {
+      me.presentWarningToast("waterlevel", "Untergrenze erreicht!\nWasserstand: " + me.waterlevel + "%");
     }
   }
 
@@ -365,19 +365,18 @@ export class Tab1Page {
       this.toastInstances[toastid].dismiss();
     }
     const toast = await this.toastController.create({
-      header: 'Warning',
-      message: message,
+      message: 'Warnung: ' + message,
       position: 'bottom',
       cssClass: 'warning-toast',
       buttons: [
         {
-          text: 'Dismiss  (5 mins)',
+          text: 'Schließen (30 mins)',
           handler: () => {
             toast.dismiss();
             me.toastDismissSnooze = true;
             setTimeout(function () {
               me.toastDismissSnooze = false;
-            }, 300000)
+            }, 1800000)
           }
         }
       ]
@@ -385,9 +384,21 @@ export class Tab1Page {
     toast.present();
     // language=CSS
     const styles = `
-    .toast-wrapper {
-      background: red !important;;
-    }
+      .toast-container {
+        flex-direction: column;
+      }
+      .toast-content {
+        align-self: flex-start;
+      }
+      .toast-header {
+        font-size: 16px !important;
+        font-weight: 700 !important;
+        padding-bottom: 2mm;
+      }
+      .toast-message {
+        font-size: 16px !important;
+        line-height: 22px;
+      }
     `;
 
     injectStyles(toast, '.inject-toast', styles);
@@ -412,5 +423,55 @@ export class Tab1Page {
     let floatnum = parseFloat(str);
     if(isNaN(floatnum)) floatnum = 0;
     return parseFloat(floatnum.toFixed(2));
+  }
+
+  // Warning function conditions
+
+  isMaxAirTemp (num:number):boolean {
+    return num > 45;
+  }
+
+  isMinAirTemp (num:number):boolean {
+    return num < 10;
+  }
+
+  isMaxHumid (num:number):boolean {
+    return num > 65;
+  }
+
+  isMinHumid (num:number):boolean {
+    return num < 30;
+  }
+
+  isMaxPhValue (num:number):boolean {
+    return num > 7;
+  }
+
+  isMinPhValue (num:number):boolean {
+    return num < 5;
+  }
+
+  isMaxECValue (num:number):boolean {
+    return num > 2;
+  }
+
+  isMinECValue (num:number):boolean {
+    return num < 0.5;
+  }
+
+  isMaxWaterTemp (num:number):boolean {
+    return num > 45;
+  }
+
+  isMinWaterTemp (num:number):boolean {
+    return num < 10;
+  }
+
+  isMaxWaterLevel (num:number):boolean {
+    return num > 100;
+  }
+
+  isMinWaterLevel (num:number):boolean {
+    return num < 10;
   }
 }

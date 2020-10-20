@@ -1,1 +1,20 @@
+.tipbutton {
+    width: 80%;
+    height: 100%;
+    margin: 0;
+    font-size: 7vw;
+    --border-radius: 2px;
+    --background: #537d52;
+    --background-activated: #377f36;
+}
 
+.tipgrid {
+    display: flex;
+    flex-direction: column;
+}
+
+.tiprow {
+    position: relative;
+    flex: 1;
+    padding: 4mm;
+}

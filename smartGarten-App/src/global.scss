@@ -91,6 +91,7 @@
     height: 80%;
     width: 140%;
 }
+
 .top-title
 {
     padding:0px;
@@ -117,9 +118,9 @@
 
 .tab3-top-h1
 {
-    font-size: 6vw;
-    margin-bottom: 0%;
-    // font-size: 5vw;
+    font-size: 200%;
+    font-weight: 800;
+    color: black;
 }
 
 .tab3-top-h6
@@ -266,7 +267,6 @@ ion-select {
 }
 
 ion-toast {
-    font-family: 'Helvetica', 'Arial Narrow', Arial, 'Franklin Gothic Medium', sans-serif;
     --background: #b58924;
     --button-color: white;
     --color: white;

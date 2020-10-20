@@ -42,13 +42,13 @@
               </ion-range>
             </ion-row>
             <ion-row class="ion-justify-content-center">
-              <ion-label>Light Intensity: {{lightIntensity}}%</ion-label>
+              <ion-label>Lichtintensität: {{lightIntensity}}%</ion-label>
             </ion-row>
           </ion-col>
 
           <ion-col size ='2' col-xl-2 col-lg-3 col-md-4>
             <ion-img class='tab2-body-img' src="assets/new-icon/Snooze.svg"></ion-img>
-            <ion-label class="snooze-label">{{(lightSnooze == true) ? 'ON' : 'OFF'}}</ion-label>
+            <!-- <ion-label class="snooze-label">{{(lightSnooze == true) ? 'ON' : 'OFF'}}</ion-label> -->
             <ion-toggle mode='md'  [(ngModel)] = 'lightSnooze' (ngModelChange) = 'lightSnoozeSet()'  color="custgreen" class="tab2-snooze-toggle toggle-calm" ></ion-toggle>
           </ion-col>  
         </ion-row>
@@ -85,12 +85,12 @@
                 </ion-range>
               </ion-row> 
               <ion-row class="ion-justify-content-center">
-                <ion-label>Fan is ON: {{fanOnTimer}} mins per hour</ion-label>
+                <ion-label>{{fanOnTimer}} min pro Stunde</ion-label>
               </ion-row>
             </ion-col>
             <ion-col size ='2'>
               <ion-img class='tab2-body-img' src="assets/new-icon/Snooze.svg"></ion-img>
-              <ion-label class="snooze-label">{{(fanSnooze == true) ? 'ON' : 'OFF'}}</ion-label>
+              <!-- <ion-label class="snooze-label">{{(fanSnooze == true) ? 'ON' : 'OFF'}}</ion-label> -->
               <ion-toggle mode='md'  [(ngModel)] = 'fanSnooze' (ngModelChange) = 'fanSnoozeSet()'  color="custgreen" class="tab2-snooze-toggle toggle-calm" ></ion-toggle>
             </ion-col>
             
@@ -119,13 +119,13 @@
                 </ion-range>
               </ion-row> 
               <ion-row class="ion-justify-content-center">
-                <ion-label>Pump is ON: {{pumpOnTimer}} mins per hour</ion-label>
+                <ion-label>{{pumpOnTimer}} min pro Stunde</ion-label>
               </ion-row>
             </ion-col>
 
             <ion-col size ='2'>
               <ion-img class='tab2-body-img' src="assets/new-icon/Snooze.svg"></ion-img>
-              <ion-label class="snooze-label">{{(pumpSnooze == true) ? 'ON' : 'OFF'}}</ion-label>
+              <!-- <ion-label class="snooze-label">{{(pumpSnooze == true) ? 'ON' : 'OFF'}}</ion-label> -->
               <ion-toggle mode='md'  [(ngModel)] = 'pumpSnooze' (ngModelChange) = 'pumpSnoozeSet()'  color="custgreen" class="tab2-snooze-toggle toggle-calm" ></ion-toggle>
             </ion-col>
 
@@ -134,13 +134,13 @@
         <ion-row style="height:auto; border-top: 1px dotted gray;" class='grid-nav' align='center'>
           <ion-col> 
             <ion-row *ngIf="isOnWifiMode" class="ion-justify-content-center">
-              <ion-label>Aktuelle Geräteuhr</ion-label>
+              <ion-label>Aktuelle Zeit</ion-label>
             </ion-row>
             <ion-row *ngIf="isOnWifiMode" class="ion-justify-content-center">
-              <ion-label style="font-weight: 800; font-size: 120%; padding: 2mm">{{datetimertc | date:'short'}}</ion-label>
+              <ion-label style="font-weight: 800; font-size: 120%; padding: 2mm">{{datetimertc | date:"dd.MM.yyyy HH:mm"}}</ion-label>
             </ion-row>
             <ion-row class="ion-justify-content-center">
-              <ion-button  fill='outline' color="custgrey" (click)="setTimeRTC()">Set Time RTC</ion-button>
+              <ion-button  fill='outline' color="custgrey" (click)="setTimeRTC()">Zeit synchronisieren</ion-button>
             </ion-row> 
           </ion-col>
         </ion-row>

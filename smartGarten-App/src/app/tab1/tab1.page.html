@@ -22,7 +22,7 @@
             <ion-img (click)="redirectToSettings()" class="body-img" src='assets/new-icon/Humidity.svg'></ion-img>
         </ion-col>
         <ion-col size ='4'>
-            <p class = 'col-p'>{{humid}}%</p>        
+            <p [ngClass]="{'col-p': true, 'warn': isMaxHumid(humid) || isMinHumid(humid)}">{{humid}}%</p>        
         </ion-col>
 
         <ion-col size ='2' align='left'>
@@ -30,7 +30,7 @@
             <ion-img (click)="redirectToSettings()" class="body-img" src='assets/new-icon/AirTemp.svg'></ion-img>
         </ion-col>
         <ion-col size ='4'>
-            <p class = 'col-p'>{{airtemp}} °C</p>        
+            <p [ngClass]="{'col-p': true, 'warn': isMaxAirTemp(airtemp) || isMinAirTemp(airtemp)}">{{airtemp}} °C</p>        
         </ion-col>
       </ion-row>
 
@@ -46,7 +46,7 @@
             <ion-img (click)="redirectToSettings()" class="body-img" src='assets/new-icon/pH.svg'></ion-img>
         </ion-col>
         <ion-col size ='4'>
-          <p class = 'col-p'>{{phValue}}</p>        
+          <p [ngClass]="{'col-p': true, 'warn': isMaxPhValue(phValue) || isMinPhValue(phValue)}">{{phValue}}</p>        
         </ion-col>
 
         <ion-col size ='2' align='left'>
@@ -54,7 +54,7 @@
           <ion-img (click)="redirectToSettings()" class="body-img" src='assets/new-icon/EC.svg'></ion-img>
         </ion-col>
         <ion-col size ='4'>
-          <p class = 'col-p'>{{ecValue}} mS</p>        
+          <p [ngClass]="{'col-p': true, 'warn': isMaxECValue(ecValue) || isMinECValue(ecValue)}">{{ecValue}} mS</p>        
         </ion-col>
       </ion-row>
       <ion-row class = 'grid-nav' align='center'>
@@ -63,7 +63,7 @@
           <ion-img (click)="redirectToSettings()" class="body-img" src='assets/new-icon/Waterlevel.svg'></ion-img>
         </ion-col>
         <ion-col size ='4'>
-          <p class = 'col-p'>{{waterlevel}} %</p>        
+          <p [ngClass]="{'col-p': true, 'warn': isMaxWaterLevel(waterlevel) || isMinWaterLevel(waterlevel)}">{{waterlevel}} %</p>        
         </ion-col>
 
         <ion-col size ='2' align='left'>
@@ -71,7 +71,7 @@
           <ion-img (click)="redirectToSettings()" class="body-img" src='assets/new-icon/Watertemp.svg'></ion-img>
         </ion-col>
         <ion-col size ='4'>
-          <p class = 'col-p'>{{watertemp}} °C</p>        
+          <p [ngClass]="{'col-p': true, 'warn': isMaxWaterTemp(watertemp) || isMinWaterTemp(watertemp)}">{{watertemp}} °C</p>        
         </ion-col>
       </ion-row>
     
