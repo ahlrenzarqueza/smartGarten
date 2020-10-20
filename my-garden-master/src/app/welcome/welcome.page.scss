@@ -14,9 +14,23 @@ ion-segment {
 }
 
 ion-segment-button {
-  --background-checked: #5a955885;
+  --background-checked: #b6d9b4;
   --border-color: transparent;
   --indicator-color-checked: transparent;
+}
+
+.actionbtn {
+  width: 100%; 
+  height: 10mm;
+  --border-radius: 2px;
+}
+
+.secondarybtn {
+  --ion-color-base: #78b476;
+}
+
+.localselect {
+  visibility: hidden;
 }
 
 .ion-segment-icon {

@@ -21,7 +21,7 @@
         
     </ion-row>
 
-    <ion-row align='center' style="height:35%">
+    <ion-row align='center' style="height:30%">
       <!-- <ion-col size='1'></ion-col> -->
       <ion-col size='12'>
         <!-- <ion-radio-group value="wifi" (ionChange)="onConnModeChange($event)">
@@ -48,7 +48,7 @@
           </ion-grid>
         </ion-radio-group> -->
 
-        <ion-segment mode="ios" style="height:40%" value="wifi" (ionChange)="onConnModeChange($event)">
+        <ion-segment mode="ios" style="height:50%" value="wifi" (ionChange)="onConnModeChange($event)">
           <ion-segment-button value="wifi">
             <!-- <ion-label>Friends</ion-label> -->
             <ion-icon class="ion-segment-icon" name="wifi"></ion-icon>
@@ -78,17 +78,28 @@
     <ion-row align='center'>
         <ion-col size='3'></ion-col>
         <ion-col size='6'>
-            <ion-button style="width: 100%; height: 15mm;" color='custgreen' (click) = "connectToGarden()">Verbinden</ion-button>
+            <ion-button class="actionbtn" color='custgreen' (click) = "connectToGarden()">Verbinden</ion-button>
         </ion-col>
         <ion-col size='3'></ion-col>
     </ion-row>
-    <ion-row class='ion-justify-content-end' style="align-content: flex-end; padding: 2mm 4mm;">
-      <!-- <a style="width: auto; height: auto;" class="configurelocalbtn" (click) = "configurelocal($event)">Configure local devices...</a> -->
+
+    <ion-row *ngIf="connectionMode == 'wifi'" align='center'>
+      <ion-col size='3'></ion-col>
+      <ion-col size='6'>
+          <ion-button class="actionbtn secondarybtn" color='custgreen' (click) = "configurelocal($event)">Konfigurieren</ion-button>
+          <ion-select #localgardenselect class="localselect" *ngIf="osIsAndroid" [interfaceOptions]="customAlertOptions" interface="alert" [(ngModel)] = 'selected_local_device' (click) = "configurelocal($event)" (ionChange)='onLocalDeviceChange($event)' style="padding: 0">
+            <ion-select-option [value] = 'device' *ngFor='let device of localdevices'>{{device.SSID ? device.SSID : device.BSSID}}</ion-select-option>
+          </ion-select>
+      </ion-col>
+      <ion-col size='3'></ion-col>
+    </ion-row>
+
+    <!-- <ion-row class='ion-justify-content-end' style="align-content: flex-end; padding: 2mm 4mm;">
       <ion-label  class="device-select-header" style="height: 6mm; font-weight: 800" (click) = "!osIsAndroid && configurelocal($event)">Configure local device(s)...</ion-label>
       <ion-select *ngIf="osIsAndroid" [interfaceOptions]="customAlertOptions" interface="alert" [(ngModel)] = 'selected_local_device' (click) = "configurelocal($event)" (ionChange)='onLocalDeviceChange($event)' style="padding: 0">
         <ion-select-option [value] = 'device' *ngFor='let device of localdevices'>{{device.SSID ? device.SSID : device.BSSID}}</ion-select-option>
       </ion-select>
-    </ion-row>
+    </ion-row> -->
   </ion-grid>
 </ion-content>
           

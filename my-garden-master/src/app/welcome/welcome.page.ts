@@ -1,10 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router'
 import { Diagnostic } from '@ionic-native/diagnostic/ngx'
 import { LocationAccuracy} from '@ionic-native/location-accuracy/ngx';
 import { InAppBrowser } from '@ionic-native/in-app-browser/ngx';
 import { Storage } from '@ionic/storage'
-import { Platform } from '@ionic/angular';
+import { Platform, IonSelect } from '@ionic/angular';
 import {LoadingController, PopoverController} from "@ionic/angular"
 import { AlertController } from "@ionic/angular";
 import { OpenNativeSettings } from '@ionic-native/open-native-settings/ngx';
@@ -21,7 +21,7 @@ declare var ble: any;
   styleUrls: ['./welcome.page.scss'],
 })
 export class WelcomePage implements OnInit {
-
+  @ViewChild("localgardenselect", {static: false}) localGardenSelect: IonSelect;
   // AWS IoT Variables
   awsiotEndpoint:string; // AWS IoT Thing Base Endpoint
   awsiot:any; // AWS SDK IoT Class
@@ -88,6 +88,7 @@ export class WelcomePage implements OnInit {
 
   async ionViewDidEnter(){
     const me = this;
+    console.log('Local Garden Select: ', this.localGardenSelect);
     this.subscription = this.platform.backButton.subscribe(()=>{
         navigator['app'].exitApp();
     });
@@ -206,9 +207,10 @@ export class WelcomePage implements OnInit {
   async onLocalDeviceChange(event) {
     if(!event.detail.value) return;
     if(this.platform.is('android') && this.connectionMode == 'wifi') {
+      const ssid = this.selected_local_device.SSID ? this.selected_local_device.SSID : this.selected_local_device.BSSID;
       const alert = await this.alertController.create({
         header: 'Password!',
-        subHeader: 'Please provide password for '+this.selected_local_device +'; or just press OK if this device is open (public Wi-Fi)',
+        subHeader: 'Please provide password for '+ ssid +'; or just press OK if this device is open (public Wi-Fi)',
         inputs: [
           {
             name: 'password',
@@ -231,14 +233,14 @@ export class WelcomePage implements OnInit {
               let pass = data.password;
               if(pass.length == 0)
               {
-                this.wifiwizard2.connect(this.selected_local_device, true).then(()=>{
+                this.wifiwizard2.connect(ssid, true).then(()=>{
                   this.localConnectionSuccess();
                 }).catch((err)=>{
                   console.log(err);
                   this.presentAlert("Couldn't connect to the device. Check whether Wi-Fi is enabled!");
                 });
               } else{
-                this.wifiwizard2.connect(this.selected_local_device,true,pass,"WPA").then(()=>{
+                this.wifiwizard2.connect(ssid,true,pass,"WPA").then(()=>{
                   this.localConnectionSuccess();
                 }).catch((err)=>{
                   console.log(err);
@@ -397,13 +399,13 @@ export class WelcomePage implements OnInit {
   async configurelocal (evt) {
     if(this.platform.is('android'))
     {
+      this.localGardenSelect.open();
       this.checkEnabledLocation();
     }
 
     if(this.platform.is('ios'))
     {
-      await this.presentAlert('To continue, you must be connected to the Garden Wi-Fi network. To change, please configure in iOS Settings.',
-                  'Wi-Fi Garden Configuration');
+      await this.presentAlert('Um fortzufahren musst du mit dem Garten direkt verbunden sein!', 'Wi-Fi Konfiguration');
       this.iosConnect(this.localConnectionSuccess);
     }
   }

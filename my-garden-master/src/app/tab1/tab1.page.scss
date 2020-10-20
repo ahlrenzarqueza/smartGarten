@@ -3,7 +3,7 @@
   overflow: hidden;
 }
 
-.grid-nav {
+.grid-nav:not(:last-child) {
   border: #00000038 !important;
   border-bottom-style: dotted !important;
 }

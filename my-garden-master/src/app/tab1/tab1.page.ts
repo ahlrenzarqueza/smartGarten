@@ -1,4 +1,4 @@
-import { Component, ElementRef, ViewChild } from '@angular/core';
+import { Component } from '@angular/core';
 import { InAppBrowser } from '@ionic-native/in-app-browser/ngx'
 import { HttpClient } from "@angular/common/http";
 import { Platform } from "@ionic/angular";
@@ -11,6 +11,7 @@ import { Storage } from '@ionic/storage';
 import { NgZone } from '@angular/core';
 import { AlertController, ActionSheetController, ToastController } from "@ionic/angular";
 import * as AWS from 'aws-sdk';
+import {injectStyles} from 'shadow-dom-inject-styles';
 import creds from '../../assets/env.json';
 
 declare var ble: any;
@@ -300,12 +301,12 @@ export class Tab1Page {
   async presentRenameGardenPrompt() {
     const alert = await this.alertController.create({
       cssClass: 'my-custom-class',
-      header: 'Rename Garden Device',
+      header: 'Gartengerät umbenennen',
       inputs: [
         {
           name: 'newname',
           type: 'text',
-          placeholder: 'Garden Device Name',
+          placeholder: 'Name des Gartengeräts',
           value: this.gardenNameSettings[this.activeDevice] || this.activeDeviceName
         }
       ],
@@ -335,19 +336,19 @@ export class Tab1Page {
       header: this.activeDeviceName,
       cssClass: 'my-custom-class',
       buttons: [{
-        text: 'Rename Garden',
+        text: 'Garten umbenennen',
         icon: 'icon-edition',
         handler: () => {
           this.presentRenameGardenPrompt();
         }
       }, {
-        text: 'Change active garden',
+        text: 'Aktiven Garten wechseln',
         icon: 'caret-back-circle-outline',
         handler: () => {
           this.router.navigateByUrl('welcome');
         }
       }, {
-        text: 'Cancel',
+        text: 'Schließen',
         icon: 'close',
         role: 'cancel',
         handler: () => {
@@ -382,6 +383,14 @@ export class Tab1Page {
       ]
     });
     toast.present();
+    // language=CSS
+    const styles = `
+    .toast-wrapper {
+      background: red !important;;
+    }
+    `;
+
+    injectStyles(toast, '.inject-toast', styles);
     this.toastInstances[toastid] = toast;
   }
 

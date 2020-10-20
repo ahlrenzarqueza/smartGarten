@@ -6,6 +6,9 @@
 #include "DHT.h"
 
 #include <EEPROM.h>
+#define EEPROM_SIZE 64
+#define EEPROM_WIFI_SSID_REF 0
+#define EEPROM_WIFI_PW_REF 32
 
 #include <WiFi.h>
 #include <WiFiClient.h>
@@ -71,6 +74,7 @@ float averageVoltage = 0,tdsValue = 0,temperature = 25;
 dimmerLamp dimmer(outputPin, zerocross);
 
 #include <ESP_WiFiManager.h>
+ESP_WiFiManager ESP_wifiManager;
 
 // SSID and PW for Config Portal
 String ssid = "SmartGarden_" + String(ESP_getChipId(), HEX);   /// ADD YOUR SSID here
@@ -726,7 +730,13 @@ void bt_setValue (char* setname, char* setvalue) {
 void connectToWiFi()
 {
   WiFi.mode(WIFI_STA);
-  WiFi.begin(Router_SSID.c_str(), Router_Pass.c_str());
+  const String wifi_ssid = String(ESP_wifiManager.getSSID());
+  const String wifi_pw = String(ESP_wifiManager.getPW());
+  Serial.println("Initialized: SSID = " + wifi_ssid + ", Pass = " + wifi_pw);
+
+  writeStringToEEPROM(EEPROM_WIFI_SSID_REF, wifi_ssid); 
+  writeStringToEEPROM(EEPROM_WIFI_PW_REF, wifi_pw); 
+  WiFi.begin(wifi_ssid.c_str(), wifi_pw.c_str());
 
   // Only try 15 times to connect to the WiFi
   int retries = 0;
@@ -747,10 +757,9 @@ void connectToWiFi()
 
 void initWifiManager()
 {
-  ESP_WiFiManager ESP_wifiManager;
   ESP_wifiManager.setAPStaticIPConfig(IPAddress(10,0,1,1), IPAddress(10,0,1,1), IPAddress(255,255,255,0));
-  Router_SSID = ESP_wifiManager.WiFi_SSID();
-  Router_Pass = ESP_wifiManager.WiFi_Pass();
+  readStringFromEEPROM(EEPROM_WIFI_SSID_REF, &Router_SSID);
+  readStringFromEEPROM(EEPROM_WIFI_PW_REF, &Router_Pass);
 
   //Remove this line if you do not want to see WiFi password printed
   Serial.println("Stored: SSID = " + Router_SSID + ", Pass = " + Router_Pass);
@@ -759,10 +768,10 @@ void initWifiManager()
   //If not found, device will remain in configuration mode until switched off via  webserver.
   Serial.print("Opening configuration portal.");
 
-  if (Router_SSID != "")
+  if (Router_SSID != "" && Router_SSID != "0")
   {
-    ESP_wifiManager.setConfigPortalTimeout(30); //If no access point name has been previously entered disable timeout.
-    Serial.println("Timeout 30s");
+    ESP_wifiManager.setConfigPortalTimeout(120); //If no access point name has been previously entered disable timeout.
+    Serial.println("Timeout 120s");
   }
   else
     Serial.println("No timeout");
@@ -776,6 +785,7 @@ void initWifiManager()
     Serial.println("Not connected to WiFi but continuing anyway.");
   else 
     Serial.println("WiFi connected...yeey :)");
+    
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1024,7 +1034,7 @@ float getEcValue() {
 }
 
 void setup() {
-
+  EEPROM.begin(EEPROM_SIZE);
   pinMode(PIN_LED, OUTPUT);
   Serial.begin(115200);
   Serial.println("\nStarting");
@@ -1425,4 +1435,29 @@ int getMedianNum(int bArray[], int iFilterLen)
   else
     bTemp = (bTab[iFilterLen / 2] + bTab[iFilterLen / 2 - 1]) / 2;
   return bTemp;
+}
+
+int writeStringToEEPROM(int addrOffset, const String &strToWrite)
+{
+  byte len = strToWrite.length();
+  EEPROM.write(addrOffset, len);
+  for (int i = 0; i < len; i++)
+  {
+    EEPROM.write(addrOffset + 1 + i, strToWrite[i]);
+  }
+  EEPROM.commit();
+  return addrOffset + 1 + len;
+}
+
+int readStringFromEEPROM(int addrOffset, String *strToRead)
+{
+  int newStrLen = EEPROM.read(addrOffset);
+  char data[newStrLen + 1];
+  for (int i = 0; i < newStrLen; i++)
+  {
+  data[i] = EEPROM.read(addrOffset + 1 + i);
+  }
+  data[newStrLen] = '\0';
+  *strToRead = String(data);
+  return addrOffset + 1 + newStrLen;
 }
