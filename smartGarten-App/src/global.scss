@@ -235,6 +235,10 @@ ion-col
     height: 13vh;
 }
 
+.sg-btn {
+    --border-radius: 2px;
+}
+
 @media screen and (max-width : 350px){
   
     .footer-h2
