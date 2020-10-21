@@ -34,5 +34,10 @@
 }
 
 .col-offset {
+  display: flex;
   margin-left: -2mm;
+  padding-bottom: 24px;
+  justify-content: center;
+  align-content: center;
+  align-items: flex-end;
 }
