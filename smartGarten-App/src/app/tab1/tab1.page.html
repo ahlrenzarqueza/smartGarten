@@ -17,19 +17,19 @@
         </ion-col>
       </ion-row>
       <ion-row class = 'grid-nav' align='center'>
-        <ion-col size ='2' align='left'>
+        <ion-col size ='3' align='left'>
             <!-- change the src of the <ion-img> to change image -->
             <ion-img (click)="redirectToSettings()" class="body-img" src='assets/new-icon/Humidity.svg'></ion-img>
         </ion-col>
-        <ion-col size ='4'>
+        <ion-col size ='3' class="col-offset">
             <p [ngClass]="{'col-p': true, 'warn': isMaxHumid(humid) || isMinHumid(humid)}">{{humid}}%</p>        
         </ion-col>
 
-        <ion-col size ='2' align='left'>
+        <ion-col size ='3' align='left'>
             <!-- change the src of the <ion-img> to change image -->
             <ion-img (click)="redirectToSettings()" class="body-img" src='assets/new-icon/AirTemp.svg'></ion-img>
         </ion-col>
-        <ion-col size ='4'>
+        <ion-col size ='3' class="col-offset">
             <p [ngClass]="{'col-p': true, 'warn': isMaxAirTemp(airtemp) || isMinAirTemp(airtemp)}">{{airtemp}} °C</p>        
         </ion-col>
       </ion-row>
@@ -41,36 +41,36 @@
       </ion-row>
 
       <ion-row align='center'>
-        <ion-col size ='2' align='left'>
+        <ion-col size ='3' align='left'>
             <!-- change the src of the <ion-img> to change image -->
             <ion-img (click)="redirectToSettings()" class="body-img" src='assets/new-icon/pH.svg'></ion-img>
         </ion-col>
-        <ion-col size ='4'>
+        <ion-col size ='3' class="col-offset">
           <p [ngClass]="{'col-p': true, 'warn': isMaxPhValue(phValue) || isMinPhValue(phValue)}">{{phValue}}</p>        
         </ion-col>
 
-        <ion-col size ='2' align='left'>
+        <ion-col size ='3' align='left'>
           <!-- change the src of the <ion-img> to change image -->
           <ion-img (click)="redirectToSettings()" class="body-img" src='assets/new-icon/EC.svg'></ion-img>
         </ion-col>
-        <ion-col size ='4'>
+        <ion-col size ='3' class="col-offset">
           <p [ngClass]="{'col-p': true, 'warn': isMaxECValue(ecValue) || isMinECValue(ecValue)}">{{ecValue}} mS</p>        
         </ion-col>
       </ion-row>
       <ion-row class = 'grid-nav' align='center'>
-        <ion-col size ='2' align='left'>
+        <ion-col size ='3' align='left'>
           <!-- change the src of the <ion-img> to change image -->
           <ion-img (click)="redirectToSettings()" class="body-img" src='assets/new-icon/Waterlevel.svg'></ion-img>
         </ion-col>
-        <ion-col size ='4'>
+        <ion-col size ='3' class="col-offset">
           <p [ngClass]="{'col-p': true, 'warn': isMaxWaterLevel(waterlevel) || isMinWaterLevel(waterlevel)}">{{waterlevel}} %</p>        
         </ion-col>
 
-        <ion-col size ='2' align='left'>
+        <ion-col size ='3' align='left'>
           <!-- change the src of the <ion-img> to change image -->
           <ion-img (click)="redirectToSettings()" class="body-img" src='assets/new-icon/Watertemp.svg'></ion-img>
         </ion-col>
-        <ion-col size ='4'>
+        <ion-col size ='3' class="col-offset">
           <p [ngClass]="{'col-p': true, 'warn': isMaxWaterTemp(watertemp) || isMinWaterTemp(watertemp)}">{{watertemp}} °C</p>        
         </ion-col>
       </ion-row>
