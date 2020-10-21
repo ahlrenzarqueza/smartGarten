@@ -68,8 +68,8 @@ export class Tab1Page {
 
   ionViewDidLeave() {
     clearInterval(this.loopResultInterval);
-
     if(!this.bt_peripheral) return;
+
     // Unsubscribe to Bluetooth notification
     const {id : device_id} = this.bt_peripheral;
     const charObj = this.bt_peripheral.characteristics.find(function (e) {
@@ -85,8 +85,8 @@ export class Tab1Page {
 
   ngOnDestroy() {
     clearInterval(this.loopResultInterval);
-    
     if(!this.bt_peripheral) return;
+
     // Unsubscribe to Bluetooth notification
     const {id : device_id} = this.bt_peripheral;
     const charObj = this.bt_peripheral.characteristics.find(function (e) {
@@ -186,7 +186,7 @@ export class Tab1Page {
                 break;
               case "wt": 
                 me.watertemp = me.parseToFloatTwoFixed(keyval[1]);
-                me.btClearTimeout();
+                me.btClearTimeout(); // Clear detection for communication timeout
                 break;
             }
             me.checkWarningTriggers();
@@ -197,6 +197,7 @@ export class Tab1Page {
         me.bt_notif_initialized = true;
       }
       
+      // Bluetooth send command: pollmeasure -> Will ask for garden device's measurements
       const writedata = me.stringToBytes('pollmeasure\n');
       ble.write(device_id, service_id, charac_id, writedata, () => {
         me.btInitTimeout();
@@ -216,6 +217,7 @@ export class Tab1Page {
     this.loopResultInterval = setInterval(() => { this.getResults(); }, interval);
   }
 
+  // Function to check Warning Triggers to show toast message
   checkWarningTriggers() {
     const me = this;
     if(this.isMaxAirTemp(me.airtemp)) {
@@ -261,23 +263,7 @@ export class Tab1Page {
     this.router.navigateByUrl('tabs/tab2');
   }
 
-  redirect() {
-    
-    // CHANGE THE LINK BELOW TO REDIRECT USER TO COMPANY WEBSITE
-    this.iab.create('https://www.simpleplant.de/', '_self');
-  }
-
-  facebook() {
-    // CHANGE THE LINK BELOW TO YOUR FACEBOOK HOME PAGE URL
-    this.iab.create('https://m.facebook.com', '_self');
-  }
-
-
-  instagram() {
-        // CHANGE THE LINK BELOW TO YOUR INSTAGRAM HOME PAGE URL
-    this.iab.create('https://instagram.com', '_self');
-  }
-
+  // Function to convert string to bytes for Bluetooth transmission
   stringToBytes(string) {
     var array = new Uint8Array(string.length);
     for (var i = 0, l = string.length; i < l; i++) {
@@ -286,10 +272,10 @@ export class Tab1Page {
      return array.buffer;
   }
 
+  // Function to present alert window with message and title as arguments
   async presentAlert(message:string, title:string = 'Alert') {
     const alert = await this.alertController.create({
       header: title,
-      // subHeader: subTitle,
       message: message,
       buttons: ['OK']
     });
@@ -298,6 +284,7 @@ export class Tab1Page {
     return alert.onDidDismiss();
   }
   
+  // Function to present alert prompting for new garden name
   async presentRenameGardenPrompt() {
     const alert = await this.alertController.create({
       cssClass: 'my-custom-class',
@@ -331,6 +318,7 @@ export class Tab1Page {
     await alert.present();
   }
 
+  // Function to present garden actions
   async presentActionSheet() {
     const actionSheet = await this.actionSheetController.create({
       header: this.activeDeviceName,
@@ -358,6 +346,7 @@ export class Tab1Page {
     await actionSheet.present();
   }
 
+  // Function to present warning toast message
   async presentWarningToast(toastid, message:string) {
     const me = this;
     if(me.toastDismissSnooze) return;
@@ -426,7 +415,6 @@ export class Tab1Page {
   }
 
   // Warning function conditions
-
   isMaxAirTemp (num:number):boolean {
     return num > 45;
   }
