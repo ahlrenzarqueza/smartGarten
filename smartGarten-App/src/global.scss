@@ -29,6 +29,8 @@
 body{
     margin-top: constant(safe-area-inset-top);
     margin-top: env(safe-area-inset-top);
+    height: calc(100% - constant(safe-area-inset-top));
+    height: calc(100% - env(safe-area-inset-top));
  }
 
 .link-color
